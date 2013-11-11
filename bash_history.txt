@@ -1,0 +1,27 @@
+cd programmi/rl-glue/
+cd core
+./configure 
+make -j3
+./configure --prefix=/home/matish/programmi/rl-glue/core
+make
+make install
+cd ..
+cd codecs/
+cd ccodec/
+cd c-codec-2.0/
+ls
+./configure
+./configure --prefix=/home/matish/programmi/rl-glue/core  --with-rl-glue=/home/matish/programmi/rl-glue/core
+make -j3
+make install
+cd
+cd programmi/optrl/
+mkdir build
+cd build/
+cmake ..
+make -j3
+cd programmi/rl-glue/rl-library/agt-cradle/
+mkdir build
+cd build/
+cmake ..
+make
