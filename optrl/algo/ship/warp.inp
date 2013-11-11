@@ -1,0 +1,12 @@
+  diana    6.           distanza minima per jesp
+  kbase    0            calcola solo il flusso base            (0=no)
+  modo     1            doppio modello (-1=negativo, 1=positivo)
+  nekel    1            0->usa il doppio modello ... 1->usa N.K.
+  drycho   y            y: Assegna il valore di dryfr n: lo fissa panca
+  dryfr    0.5          Dry transom threshold value
+  CG       0.02800      0.06300
+  FILE DI INPUT: GRIGLIA CARENA, GRIGLIA F.S. , PUNTI TRANSOM
+confine.grd
+fsgrid.grd
+carena_0.dat
+transom.grd

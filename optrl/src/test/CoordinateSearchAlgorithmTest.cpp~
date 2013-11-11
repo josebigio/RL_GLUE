@@ -1,0 +1,45 @@
+#include "CoordinateSearchAlgorithmTest.h"
+
+#include "problems/QuadraticProblem.h"
+
+#include <pargo/CoordinateSearchAlgorithm.h>
+
+#include <iostream>
+
+using namespace std;
+
+namespace pargo {
+  
+CPPUNIT_TEST_SUITE_REGISTRATION( CoordinateSearchAlgorithmTest );
+  
+void CoordinateSearchAlgorithmTest::setUp() {}
+
+
+void CoordinateSearchAlgorithmTest::tearDown() {}
+
+
+
+void CoordinateSearchAlgorithmTest::testRun() {
+ 
+	Problem * prob = new QuadraticProblem();
+	vector<double> initial(prob->getn(),0);
+
+
+	CoordinateSearchAlgorithm alg ( prob );
+	alg.run ( initial );
+
+	
+	vector<double> point = alg.getx();
+	
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(-3.25,alg.getf(),0.001);
+
+	
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1, point[0],0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.5, point[1],0.001);
+	
+	delete prob;
+  
+}
+
+  
+}

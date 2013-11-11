@@ -1,0 +1,28 @@
+#include <pargo/Poll.h>
+
+#include <pargo/PollObserver.h>
+
+#include <cstddef> //for NULL in new compilers (e.g., gcc from 4.6)
+
+namespace pargo {
+
+Poll::Poll() : observer(NULL) {}
+
+void Poll::functionComputed(const std::vector<double>&  point, double value) {
+    if(observer != NULL)
+        observer->functionComputed(point,value);
+
+    doFunctionComputed(point,value);
+}
+
+void Poll::setObserver(PollObserver* ob) {
+    observer = ob;
+}
+
+void Poll::deleteObserver() {
+    observer = NULL;
+}
+
+Poll::~Poll() {}
+
+}

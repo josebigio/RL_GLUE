@@ -1,0 +1,22 @@
+#ifndef pargo_Optimizer_h__guard
+#define pargo_Optimizer_h__guard
+
+
+namespace pargo {
+
+class Problem;
+class Poll;
+
+struct Optimizer {
+
+    virtual unsigned long run(const Problem* problem, Poll *poll,unsigned long maxEvaluations ) = 0;
+
+
+    virtual ~Optimizer() {}
+
+};
+
+
+}
+
+#endif

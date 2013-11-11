@@ -1,0 +1,26 @@
+#include "ShipProblem.h"
+
+extern "C" { void warp_interface_(double * &, const int &, double &, const int &, const int &); }
+
+namespace pargo {
+
+using namespace std;
+
+int ShipProblem::getn() const {
+	return 5;
+}
+
+double ShipProblem::computef ( const std::vector<double>& x ) const {
+//   static int count = 0;
+// 	std::cout << "valutazione " << ++count << std::endl;
+	double f;
+	double* y= const_cast<double*>( &x[0] );
+	warp_interface_(y,5,f,1,1);
+	return f;
+}
+
+std::vector<BoundsPair> ShipProblem::getBounds() const {
+  return vector<BoundsPair>(getn(),make_pair(0.,1.) );
+}
+
+}

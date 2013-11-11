@@ -1,0 +1,60 @@
+#include <pargo/ControlledRandomSearchAlgorithm.h>
+
+#include <pargo/Problem.h>
+
+
+#include <iostream>
+
+//using namespace std;
+
+namespace pargo {
+
+  using namespace std;
+  
+  
+int ControlledRandomSearchAlgorithm::run()
+{
+    iter=0;
+
+    n=prob.getn();
+
+	for (int i=0; i<n; ++i) {
+		lb[i]=prob.getlb()[i];
+		ub[i]=prob.getub()[i];
+	}
+	int familySize=n+1;
+    popul.createPopulation(lb,ub,prob);
+	popul.computeDelta();
+
+    cout << "iter \t delta \t f" << endl;
+    cout << iter << " \t " << popul.getDelta() << " \t " << popul.getfBest() << endl;
+
+    while ((popul.getDelta() > stop) && (iter < maxiter)) {
+        popul.computeFamily(familySize);
+        popul.computeCentroid();
+        popul.computeReflexWorstCentroid(&prob);
+        if (isFeasible(popul.getReflexWorstCentroid())) {
+            if (popul.getfWorst() > popul.getfReflexWorstCentroid()) {
+                popul.subsReflexWorstCentroidWithWorst();
+                popul.computeDelta();
+            }
+        }
+        iter++;
+        cout << iter << " \t " << popul.getDelta() << " \t " << popul.getfBest() << endl;
+    }
+
+    return 1;
+}
+
+bool ControlledRandomSearchAlgorithm::isFeasible(double *x) {
+    bool result=true;
+    for (int i=0; i<n; ++i) {
+        if ((x[i]<lb[i]) || (x[i]>ub[i])) {
+                result=false;
+                break;
+        }
+    }
+    return result;
+}
+
+}

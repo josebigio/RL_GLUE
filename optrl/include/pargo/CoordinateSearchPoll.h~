@@ -1,0 +1,47 @@
+#ifndef pargo_CoordinateSearchPoll_h__guard
+#define pargo_CoordinateSearchPoll_h__guard
+
+#include <pargo/Poll.h>
+
+#include <vector>
+
+namespace pargo {
+
+class CoordinateSearchPoll : public Poll{
+
+    const double theta;
+	const double minStep;
+	double step;
+	  
+public:
+  
+  CoordinateSearchPoll(const std::vector<double>& initial, 
+								double initialStep,
+								double minStep = 0.001,
+								double theta = 0.5);
+  
+  std::vector<double> nextPoint();
+  
+  void functionComputed(double value);
+  
+  bool hasConverged() const;
+  
+  double getBestValue() const;
+  std::vector<double> getBestPoint() const;
+  
+  
+private:
+  
+
+    std::vector<double> best, last,centre;
+    double bestValue;
+    int stage,offset;
+  
+};
+
+
+
+}
+
+#endif
+

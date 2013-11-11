@@ -1,0 +1,7 @@
+
+SET( pargo_SRC
+	${pargo_SRC}
+	${CMAKE_CURRENT_SOURCE_DIR}/LinearFA.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/FourierFA.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/PolynomialFA.cpp
+PARENT_SCOPE )

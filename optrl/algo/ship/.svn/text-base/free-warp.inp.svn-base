@@ -1,0 +1,7 @@
+----========< File di input per FREE >========----
+n	|	Blocca il trim 
+n	|	Blocca il sinkage 
+1.E-1	|	Parametro di convergenza (in percentuale)
+100 	|	Numero di iterazioni massimo per ogni Froude
+1
+  0.50000     0.0     0.0

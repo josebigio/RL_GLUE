@@ -1,0 +1,203 @@
+#include "LineSearchPollTest.h"
+
+
+#include <algorithm>
+#include <cstring>
+
+using namespace std;
+
+namespace pargo {
+
+CPPUNIT_TEST_SUITE_REGISTRATION( LineSearchPollTest );
+
+static int numVariables = 10; //at least 2
+
+template <typename T>
+static valarray<T> vecToVal ( const vector<T>& v ) {
+	return valarray<T> ( &v[0],v.size() );
+}
+
+template <typename T>
+static vector<T> valToVec ( const valarray<T>& v ) {
+	return vector<T> ( &v[0],&v[v.size()] );
+}
+
+void LineSearchPollTest::setUp() {
+	
+	valarray<double> zero(0.,numVariables);
+	
+	for(int i=0; i<zero.size(); ++i) {
+		directions.push_back(zero);
+		directions[i*2][i] = 1;
+		
+		directions.push_back(zero);
+		directions[i*2+1][i] = -1;
+		
+	}
+	
+	sort(directions.begin(),directions.end(),ValarrayLess());
+
+	p.initialStep = 1;
+	p.delta = 2;
+	p.gamma = 0.01;
+	p.minStep = 0.001;
+	p.theta = 0.5;
+	
+	poll = new LineSearchPoll(vector<double>(numVariables,0),0,p);
+	
+}
+
+
+void LineSearchPollTest::tearDown() {
+	directions.clear();
+	delete poll;
+}
+
+static void printPoint(const vector<double>& point) {
+    for(int j=0, size = point.size(); j<size; ++j)
+        cout << point[j] << " ";
+    cout << endl;
+}
+
+void LineSearchPollTest::testRun() {
+
+    vector<double> initial(prob.getn(),0);
+    double initialV = prob.computef(initial);
+
+
+    LineSearchPoll lsp(initial,initialV);
+//     printPoint(initial);
+//     cout << "value: " << initialV << endl;
+
+    while(!lsp.hasConverged()) {
+        vector<double> point = lsp.nextPoint();
+//         printPoint(point);
+//         cout << "value: " << prob->computef(point) << endl;
+        lsp.functionComputed(point,prob.computef(point));
+    }
+
+    vector<double> point = lsp.getBestPoint();
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-3.25,lsp.getBestValue(),0.001);
+
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1, point[0],0.001);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.5, point[1],0.001);
+
+}
+
+
+
+void LineSearchPollTest::testNextPoint() {
+
+	double alpha = p.initialStep;
+	
+    for(int i=0; i< directions.size()*4; ++i) {
+
+		if(i > 0 && (i % directions.size() == 0))
+			alpha *= p.theta;
+
+        vector<double> point = poll->nextPoint();
+// 		printPoint(point);
+
+		valarray<double> pointVal(vecToVal(point));
+		
+		int s = (pointVal != ( alpha * directions[i%directions.size()])).sum();
+
+		CPPUNIT_ASSERT_EQUAL(0,s);
+
+    }
+
+
+}
+
+void LineSearchPollTest::testRing() {
+
+	for(int i=0; i< directions.size()*5; ++i)
+		poll->nextPoint();
+
+	poll->functionComputed(valToVec(valarray<double>(directions[0]*p.initialStep)),0);
+	poll->functionComputed(valToVec(valarray<double>(directions[1]*p.initialStep)),0);
+
+	poll->functionComputed(valToVec(valarray<double>(directions[0]*p.theta)),0);
+	poll->functionComputed(valToVec(valarray<double>(directions[1]*p.theta)),0);
+	poll->functionComputed(valToVec(valarray<double>(directions[2]*p.theta)),-1);
+
+	poll->functionComputed(valToVec(valarray<double>(directions[2]*p.initialStep)),-1);
+
+	valarray<double> correct = directions[2]*p.initialStep;
+
+    vector<double> point = poll->getCentre();
+//     printPoint(point);
+
+	valarray<double> pointVal = vecToVal(point);
+
+	int s = (pointVal != correct).sum();
+	
+	CPPUNIT_ASSERT_EQUAL(0,s);
+
+}
+
+void LineSearchPollTest::testInternalAfterRing() {
+	for(int i=0; i< directions.size()*5; ++i)
+		poll->nextPoint();
+
+	vector< valarray<double> >::const_iterator it = directions.begin();
+
+	//some point of the ring to start
+	poll->functionComputed(valToVec(valarray<double>((*it)*p.initialStep)),0);
+// 	printPoint(valToVec(*it));
+	++it;
+	poll->functionComputed(valToVec(valarray<double>((*it)*p.initialStep)),0);
+// 	printPoint(valToVec(*it));
+	++it;
+
+	//good point inside the ring to remember
+	poll->functionComputed(valToVec(valarray<double>(directions[1]*p.theta)),-1);
+// 	printPoint(valToVec(valarray<double>(directions[1]*p.theta)));
+
+	//rest of the ring
+	for(;it != directions.end(); ++it) {
+		poll->functionComputed(valToVec(valarray<double>((*it)*p.initialStep)),0);
+// 		printPoint(valToVec(*it));
+	}
+	
+	valarray<double> correct = directions[1]*p.theta;
+	
+	vector<double> point = poll->getCentre();
+// 	printPoint(point);
+	
+	valarray<double> pointVal = vecToVal(point);
+	
+	int s = (pointVal != correct).sum();
+	
+	CPPUNIT_ASSERT_EQUAL(0,s);
+
+}
+
+void LineSearchPollTest::testOldPoint() {
+	for(int i=0; i< directions.size()*5; ++i)
+		poll->nextPoint();
+
+	poll->functionComputed(valToVec(valarray<double>(directions[0]*p.initialStep)),-1);
+	poll->nextPoint();
+
+	//this one should be discarded
+	poll->functionComputed(valToVec(valarray<double>(directions[1]*p.initialStep)),-2);
+
+	valarray<double> correct = directions[0]*p.initialStep;
+	
+	vector<double> point = poll->getCentre();
+// 	printPoint(point);
+	
+	valarray<double> pointVal = vecToVal(point);
+	
+	int s = (pointVal != correct).sum();
+	
+	CPPUNIT_ASSERT_EQUAL(0,s);
+
+}
+
+
+
+}

@@ -1,0 +1,15 @@
+#include <pargo/MPIOptimizer.h>
+
+
+#include <mpi.h>
+
+namespace pargo {
+	
+
+unsigned long MPIOptimizer::run(const Problem* problem, Poll *poll,unsigned long maxEvaluations) {
+
+    return 0;
+
+}
+
+}

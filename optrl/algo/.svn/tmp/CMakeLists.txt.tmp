@@ -1,0 +1,57 @@
+PROJECT(algorithms)
+
+cmake_minimum_required(VERSION 2.6)
+
+# set(CMAKE_CXX_COMPILER "mpicxx")
+# set(CMAKE_C_COMPILER "mpicxx")
+
+include_directories($ENV{PARGO_INCLUDE})
+link_directories($ENV{PARGO_LIB})
+
+set(problems_SRC)
+add_subdirectory(problems)
+
+add_library(problems SHARED ${problems_SRC})
+
+
+ find_package(MPI REQUIRED)
+find_package(Boost REQUIRED)
+
+
+
+include_directories(${MPI_INCLUDE_PATH} ${Boost_INCLUDE_DIR} problems)
+
+<<<<<<< .mine
+# add_executable(globalRandomPoll_mpi globalRandomPoll_mpi.cpp )
+# target_link_libraries(globalRandomPoll_mpi pargo ${MPI_LIBRARIES} problems)
+=======
+add_executable(globalRandomPoll_mpi globalRandomPoll_mpi.cpp )
+target_link_libraries(globalRandomPoll_mpi pargo ${MPI_LIBRARIES} problems)
+>>>>>>> .r11939
+
+<<<<<<< .mine
+# add_executable(lineSearch_mpi lineSearch_mpi.cpp )
+# target_link_libraries(lineSearch_mpi pargo ${MPI_LIBRARIES} problems)
+=======
+add_executable(globalFastPoll_mpi globalFastPoll_mpi.cpp )
+target_link_libraries(globalFastPoll_mpi pargo ${MPI_LIBRARIES} problems)
+
+add_executable(lineSearch_mpi lineSearch_mpi.cpp )
+target_link_libraries(lineSearch_mpi pargo ${MPI_LIBRARIES} problems)
+>>>>>>> .r11939
+
+<<<<<<< .mine
+add_executable(test main.cpp )
+target_link_libraries(test pargo problems)
+=======
+# add_executable(test main.cpp )
+# target_link_libraries(test pargo problems)
+>>>>>>> .r11939
+
+# add_executable(two_phases twophases.cpp problems/QuadraticProblem.cpp problems/MultiModalGaussianProblem.cpp)
+# 
+# target_link_libraries(two_phases pargo)
+# 
+# add_executable(lineSearch_mpi lineSearch_mpi.cpp problems/QuadraticProblem.cpp problems/MultiModalGaussianProblem.cpp)
+# 
+# target_link_libraries(lineSearch_mpi pargo ${MPI_LIBRARIES})

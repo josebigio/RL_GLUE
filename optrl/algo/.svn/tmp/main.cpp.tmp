@@ -1,0 +1,79 @@
+#include <iostream>
+#include <pargo/RandomGlobalPoll.h>
+#include <pargo/LineSearchPoll.h>
+
+#include <pargo/SequentialOptimizer.h>
+#include <pargo/ParallelOptimizer.h>
+
+#include "GnuplotObserver.h"
+
+#include "problems/ProblemStore.h"
+
+#include <pargo/Problem.h>
+
+#include <vector>
+
+#include <stdlib.h>
+#include <time.h>
+
+using namespace std;
+using namespace pargo;
+
+int main() {
+	srand ( time ( NULL ) );
+
+
+	Problem &prob = *ProblemStore::getProblemByName("JugsProblem");
+
+	vector<double> initial ( prob.getn(),0 );
+	initial[0] = 0;
+	initial[1] = 0;
+
+	LineSearchPoll::ParamType p;
+	p.initialStep = 1e-1;
+	p.minStep = 1e-2;
+	p.gamma = 1e-50;
+// 	LineSearchPoll poll ( initial,prob.computef ( initial ),p );
+
+<<<<<<< .mine
+	RandomGlobalPoll poll(100,prob.getBounds(),1e-2);
+=======
+// 	RandomGlobalPoll poll(20,prob.getBounds(),1.);
+	
+//	GnuplotObserver obs("points.txt");
+//	poll.setObserver(obs);
+>>>>>>> .r11868
+
+	GnuplotObserver obs ( "points.txt" );
+	poll.setObserver ( obs );
+
+// 	cout << "[" << endl;
+//     for(int i=0, size = initial.size(); i<size; ++i)
+//         std::cout << initial[i] << " ";
+//     std::cout << " " << prob.computef(initial) << ";" << std::endl;
+
+
+	//cout << "Family step prints:" << endl;
+
+//      ParallelOptimizer opt(5);
+	SequentialOptimizer opt;
+
+	unsigned long count = opt.run ( &prob,&poll,1000000 );
+// 	cout << "]" << endl;
+
+// 	LineSearchPoll poll2(poll.getBestPoint(),poll.getBestValue(),p);
+// 	poll2.setObserver(obs);
+// 	count += opt.run(&prob,&poll2,500);
+
+	cout << "best point:" << endl;
+
+	for ( int i=0; i<prob.getn(); ++i ) {
+		cout << poll.getBestPoint() [i] << " \t \t";
+	}
+
+	cout << endl;
+	cout << "f best:" << poll.getBestValue() << endl;
+	cout << "f count=" << count << endl;
+
+	return 0;
+}

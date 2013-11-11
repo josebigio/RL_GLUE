@@ -1,0 +1,52 @@
+#ifndef pargo_CEMPoll_h__guard
+#define pargo_CEMPoll_h__guard
+
+#include <pargo/Poll.h>
+
+#include <pargo/BoundsPair.h>
+#include <pargo/PointValuePair.h>
+
+
+#include <valarray>
+
+namespace pargo {
+
+struct CEMPollParams {
+
+    double iterations,sigma;
+};
+
+/**
+ * \brief Cross Entropy Method
+ * \warning Supports only sequential algorithms
+ * */
+class  CEMPoll : public Poll {
+
+public:
+	
+	typedef CEMPollParams ParamType;
+	
+	CEMPoll(const std::vector<BoundsPair> & bounds,const std::vector<double> & initial, const ParamType& par = ParamType());
+
+	std::vector<double> nextPoint();
+
+    bool hasConverged() const;
+
+    double getBestValue() const;
+    std::vector<double> getBestPoint() const;
+
+private:
+	
+	ParamType par;
+	
+	VectorValuePair best;
+	std::valarray<double> lower_bounds, upper_bounds, centre,sigma;
+	
+	std::vector<std::valarray< double > > lastPoints;
+	
+    void doFunctionComputed(const std::vector<double>& , double value);
+
+};
+}
+
+#endif

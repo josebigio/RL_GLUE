@@ -1,0 +1,52 @@
+------------------------------------------------------------------              
+|                       INPUT file for PANCA                     |              
+------------------------------------------------------------------              
+'Delft'                   | Vessel name                           CARENA        
+ 3.000                    | Vessel lenght (m) for total res.      SHIPLEN       
+n                         | Flare condition (y/n)                 FLARE         
+0                         | Starting Flare section (integer)      NFLARE        
+--------------------------|---------------------------------------              
+y                         | Swath ship      (y/n)                 SWATH         
+0.00                      | Half beam (before nondimens.)         YSWATH        
+------ Geometry param. before nondimens.--------------------------              
+n                         | Symmetrical ship                      (y/n) ?       
+  1.0                     | Lenght                                DIST_PP       
+  0.0                     | Stretching lenght for JUMBO-SHIP      STRE_LE       
+ -0.5                     | X traslation                          XTRASLA       
+  0.000000                | Z traslation                         ZTRASLA        
+n                         | X mirror   (y/n) ?                    XMIRROR       
+n                         | Y mirror   (y/n) ?                    YMIRROR       
+n                         | Z mirror   (y/n) ?                    ZMIRROR       
+--------------------------|---------------------------------------              
+ 0.00000000               | Z ( < 0 ==> sinks) after nondimens.   SNKG
+ 0.00000000               | Trim (rad , >0 if the bow sinks)      TRIM
+ 0.0                      | Panel packing threshold               AREAMIN       
+--------------------------|---------------------------------------              
+y                         | Geometry check files (y/n)            GEOFILE       
+  1                       | Number of files (one each domain)     NUMFILEST
+  1                       | Number of files (one each domain)     NUMFILINT
+--------------------------|----------------------------------(1)--              
+'./gmorpho.grd'               | File name                                       
+y                         | Free surface domain             (y/n) ?             
+y                         | Transom domain                  (y/n) ?             
+n                         | Jumbo domain (No/Downstream/Upstream) ?             
+n                         | Cut section                     (y,n) ?             
+n                         | Extra-panels                    (y,n) ?             
+0                         | Number of extra panel rows      NLIFT               
+0.0                       | Height of extra panels          DZ                  
+n                         | (i,j)  exchange                 (y/n) ?             
+n                         | Reverse flow  i                 (y/n) ?             
+n                         | Reverse flow  j                 (y/n) ?             
+--------------------------|----------------------------------(1)--              
+'./gmorphi.grd'               | File name                                       
+y                         | Free surface domain             (y/n) ?             
+y                         | Transom domain                  (y/n) ?             
+n                         | Jumbo domain (No/Downstream/Upstream) ?             
+n                         | Cut section                     (y,n) ?             
+n                         | Extra-panels                    (y,n) ?             
+0                         | Number of extra panel rows      NLIFT               
+0.0                       | Height of extra panels          DZ                  
+n                         | (i,j)  exchange                 (y/n) ?             
+n                         | Reverse flow  i                 (y/n) ?             
+n                         | Reverse flow  j                 (y/n) ?             
+--------------------------|---------------------------------------              

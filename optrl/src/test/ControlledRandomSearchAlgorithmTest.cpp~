@@ -1,0 +1,53 @@
+#include "ControlledRandomSearchAlgorithmTest.h"
+
+#include "problems/QuadraticProblem.h"
+
+#include <pargo/ControlledRandomSearchAlgorithm.h>
+
+#include <iostream>
+
+using namespace std;
+
+namespace pargo {
+  
+// CPPUNIT_TEST_SUITE_REGISTRATION( ControlledRandomSearchAlgorithmTest );
+  
+void ControlledRandomSearchAlgorithmTest::setUp() {}
+
+
+void ControlledRandomSearchAlgorithmTest::tearDown() {}
+
+
+
+void ControlledRandomSearchAlgorithmTest::testRun() {
+  
+//   cout << "Coordinate-search method" << endl;
+
+	Problem * prob = new QuadraticProblem();
+
+	ControlledRandomSearchAlgorithm alg ( prob );
+	alg.run ( );
+
+
+	cout << endl << "iterations = " << alg.getiter() << endl;
+	cout << "f = " << alg.getf() << endl;
+	cout << "x = [ ";
+	for ( unsigned int i=0; i<alg.getn(); ++i ) {
+		cout << alg.getx() [i] << " ";
+	}
+	cout << "]" << endl;
+	
+	double *point = alg.getx();
+	
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(-3.25,alg.getf(),0.001);
+
+	
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1, point[0],0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.5, point[1],0.001);
+	
+	delete prob;
+  
+}
+
+  
+}

@@ -1,0 +1,133 @@
+#include <pargo/CoordinateSearchAlgorithm.h>
+
+#include <pargo/Problem.h>
+#include <pargo/AsynchCoordSearchAlg.h>
+
+#include <iostream>
+#include <stdexcept>
+
+
+using namespace std;
+
+namespace pargo {
+
+
+CoordinateSearchAlgorithm::CoordinateSearchAlgorithm ( Problem* prob ) :prob ( *prob ) {}
+
+void CoordinateSearchAlgorithm::run ( const vector<double>& xin ) {
+
+	if ( xin.size() != prob.getn() )
+		throw invalid_argument ( "The initial vector has wrong size" );
+
+	//reset variables
+
+	iter=0;
+	stepsize=1;
+
+	x = xin;
+
+	//go
+	f = prob.computef ( x );
+	
+	CoordinateSearchPoll alg(xin,stepsize,stop,theta);
+
+
+// 	cout << "iter \t step \t f" << endl;
+// 	cout << iter << " \t "<< stepsize << " \t " << f << endl;
+
+	while ( !alg.hasConverged() && ( iter < maxiter ) ) {
+
+		alg.functionComputed(prob.computef(alg.nextPoint()));
+		x = alg.getBestPoint();
+		f = alg.getBestValue();
+		
+		iter++;
+// 		cout << iter << " \t " << stepsize << " \t " << f << endl;
+	}
+
+
+}
+
+// void CoordinateSearchAlgorithm::poll() {
+//   vector<double> xout =x;
+// 	
+//     for (unsigned int i=0, size = x.size(); i<2*size; ++i) {
+//         int k=i/2;
+// 
+//         xout[k]=x[k]+((i & 1 ==1)?1:-1)*stepsize;
+//         double fout = prob.computef(xout);
+// 
+//         if (fout < f) {
+//             f = fout;
+// 			x = xout;
+// 			return;
+//         }
+//         xout[k]=x[k];
+//     }
+// 
+//     stepsize*=theta;
+// }
+
+int CoordinateSearchAlgorithm::getn() const {
+	return prob.getn();
+}
+
+
+
+// int CoordinateSearchAlgorithm::runfile(const double& xin)
+// {
+//     iter=0;
+//     stepsize=1;
+//     double theta=0.5;
+//     string line;
+//     string name="prob";
+//     string namefile=name+".txt";
+//     string commandN=name+" >> "+namefile;
+//     system(commandN.c_str());
+//     ifstream probfile (namefile.c_str());
+//     if (probfile.is_open() && probfile.good()) {
+//         getline (probfile,line);
+//     }
+//     else {
+//         cout << "Unable to open file";
+//         exit(1);
+//     }
+//     n=atoi(line.c_str());
+// //    Poll poll(n);
+//     PollCoordsLight poll(n);
+//
+//     x = new double [n];
+//     for (int i=0; i<n; ++i) {
+//         x[i]=xin;
+//     }
+//     ostringstream commandF;
+//     commandF << name;
+//     for (int i=0; i<n; ++i) {
+//         commandF << " " << x[i];
+//     }
+//     commandF << " >> " << namefile;
+//     system(commandF.str().c_str());
+//     prob.computef(x);
+//     f=prob.getf();
+//
+//     cout << "iter \t step \t f" << endl;
+//     cout << iter << " \t 1 \t " << f << endl;
+//
+//     while ((stepsize > stop) && (iter < maxiter)) {
+//         int pollsuccess=poll.computepoll(x,f,stepsize,prob);
+//         if (pollsuccess==0) {
+//             stepsize*=theta;
+//         } else {
+//             for (unsigned int i=0; i<n; ++i) {
+//                 x[i]=poll.getx()[i];
+//             }
+//             f=poll.getf();
+//         }
+//         iter++;
+//         cout << iter << " \t " << stepsize << " \t " << f << endl;
+//     }
+//
+//     return 1;
+// }
+
+}

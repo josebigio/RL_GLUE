@@ -1,0 +1,41 @@
+#ifndef pargo_LineSearchPoll_old_h__guard
+#define pargo_LineSearchPoll_old_h__guard
+
+#include <pargo/Poll.h>
+
+#include <vector>
+
+namespace pargo {
+
+class  LineSearchPoll_old : public Poll{
+public:
+
+    LineSearchPoll(const std::vector<double>& initial,
+                   double initValue,
+                   double minStep = 0.001,
+                   double delta = 2,
+                   double theta = 0.5,
+                   double gamma = 0.01
+                  );
+
+    std::vector<double> nextPoint();
+	
+    void functionComputed(const std::vector<double>& ,double value);
+	
+    bool hasConverged() const;
+
+    double getBestValue() const;
+    std::vector<double> getBestPoint() const;
+private:
+
+    int k();
+	int ksign();
+
+    std::vector<double> bestPoint,centre,last,candidate,alpha;
+    double bestValue,candValue,delta,theta,alpha_p,centreValue,gamma,minStep;
+    unsigned int dir;
+    bool expansion;
+};
+}
+
+#endif

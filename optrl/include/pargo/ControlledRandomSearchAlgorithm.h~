@@ -1,0 +1,41 @@
+#ifndef CONTROLLEDRANDOMSEARCHALGORITHM_H
+#define CONTROLLEDRANDOMSEARCHALGORITHM_H
+
+#include "Population.h"
+
+namespace pargo {
+
+  class Problem;
+  
+class ControlledRandomSearchAlgorithm
+{
+    public:
+        explicit ControlledRandomSearchAlgorithm(Problem *prob) : maxiter(1000),
+                    stop(1E-5), primaryThreshold(0.25), 
+                    secondaryThreshold(0.25),
+                    dim(25*prob->getn()),
+                    popul(prob->getn(),dim),
+                    prob(*prob) {};
+        int run();
+        const int& getn() { return n; };
+        double* getx() { return popul.getBest(); };
+        int getiter() { return iter; }
+        double getf() { return popul.getfBest(); }
+    protected:
+    private:
+        const int maxiter;
+        const double stop, primaryThreshold, secondaryThreshold;
+        int n, dim, iter;
+        double primarySuccesses, secondarySuccesses;
+        double *lb, *ub;
+		Population popul;
+		
+		bool isFeasible(double *x);
+		
+		//does not own
+		Problem& prob;
+};
+
+}
+
+#endif // CONTROLLEDRANDOMSEARCHALGORITHM_H

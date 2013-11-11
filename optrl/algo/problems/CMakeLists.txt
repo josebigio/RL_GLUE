@@ -1,0 +1,28 @@
+
+SET( problems_SRC ${problems_SRC}
+	${CMAKE_CURRENT_SOURCE_DIR}/ProblemStore.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/QuadraticProblem.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/MultiModalGaussianProblem.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/checkTemplates.cpp
+#  	${CMAKE_CURRENT_SOURCE_DIR}/BealeProblem.cpp
+#  	${CMAKE_CURRENT_SOURCE_DIR}/Bohachevsky1Problem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/Bohachevsky2Problem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/Bohachevsky3Problem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/BoothProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/BraninProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/SixHumpCamelbackProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/ColvilleProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/EasomProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/GoldsteinPriceProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/SchubertProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/SchubertPenalized1Problem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/SchubertPenalized2Problem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/TreccaniProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/QuarticProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/PowellProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/Hartmann3Problem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/Hartmann6Problem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/HumpProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/MatyasProblem.cpp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/Jugs.cpp
+PARENT_SCOPE)

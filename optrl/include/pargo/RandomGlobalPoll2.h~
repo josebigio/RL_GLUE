@@ -1,0 +1,79 @@
+#ifndef pargo_RandomGlobalPoll2_h__guard
+#define pargo_RandomGlobalPoll2_h__guard
+
+#include <pargo/Poll.h>
+#include <pargo/BoundsPair.h>
+#include <pargo/PointValuePair.h>
+
+#include <vector>
+#include <set>
+
+namespace pargo {
+
+class Problem;
+
+
+class RandomGlobalPoll2 : public Poll {
+public:
+
+    RandomGlobalPoll2(const int populSize, const std::vector<BoundsPair> & bounds, double minDelta = 0.001);
+
+    virtual bool hasConverged() const;
+
+    virtual double getBestValue() const;
+    virtual std::vector<double> getBestPoint() const;
+    
+    void setPopulation(const std::vector< std::pair< std::vector<double>, double > >& newPopul);
+	
+ 
+	//stat functions
+	
+    double getDelta() const{
+        return delta;
+    };
+	
+	double getInitialDelta() const;
+	
+	unsigned long long getTimesPointAccepted() const;
+	
+	unsigned long long getTimesBestChanged() const;
+
+	unsigned long long getTimesInitialPopulation() const;
+	
+	std::vector<double> getInitialBestPoint() const;
+	
+	double getInitialBestValue() const;
+
+
+    std::vector<double> nextPoint();
+	
+
+	typedef std::vector< VectorValuePair > PopulationType;
+
+
+private:
+    const int dimPopul;
+	
+	PopulationType population;
+	
+    PopulationType::iterator idxmax, idxmin;
+    double delta, deltaInit, minDelta;
+    std::vector<BoundsPair> bounds;
+	
+	//statistics
+	unsigned long long timesPointAccepted, timesBestChanged, timesInitialPopulation;
+	VectorValuePair initialBest;
+
+	void doFunctionComputed(const std::vector<double>& , double value);
+    std::vector<double>  computeFamilyStepPoint(const int size);
+    int computedFamilyStepFunction( const std::vector<double>& newPoint, double fNewPoint);
+	void prepareForFamily();
+	std::vector<double> randomPoint() const;
+	bool isPointValid(const std::vector<double>& point) const;
+	
+	std::set< PopulationType::const_iterator > createFamilySet (int);
+};
+
+}
+
+#endif // RandomGlobalPoll_h

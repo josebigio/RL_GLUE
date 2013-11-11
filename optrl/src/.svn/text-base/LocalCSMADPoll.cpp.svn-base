@@ -1,0 +1,164 @@
+#include <pargo/LocalCSMADPoll.h>
+
+
+#include <iostream>
+
+using namespace std;
+
+namespace pargo {
+
+LocalCSMADPoll::LocalCSMADPoll(const std::vector<BoundsPair> & bounds, const std::vector<double> & initial, double initV,const ParamType& par ) :
+    alpha(par.initialStep),
+    specialDir(initial.size()),
+    lower_bounds(initial.size()),
+    upper_bounds(initial.size()),
+    oldPoint(&initial[0],initial.size()),
+    index(0),
+    dirCount(0),
+    probDim(initial.size()),
+    dirNum(initial.size()*2+1),
+    specialSet(false),
+    bestSet(true),
+    par(par),
+    best(make_pair(valarray<double>(&initial[0],initial.size()),initV)) {
+
+    specialDir[0] = 1;
+
+    std::vector<BoundsPair>::const_iterator it = bounds.begin();
+    for(int j = 0; it != bounds.end(); ++it, ++j) {
+        lower_bounds[j] = it->lowerBound();
+        upper_bounds[j] = it->upperBound();
+    }
+
+}
+
+LocalCSMADPoll::LocalCSMADPoll(const std::vector<BoundsPair> & bounds, const std::vector<double> & initial,const ParamType& par ) :
+    alpha(par.initialStep),
+    specialDir(initial.size()),
+    lower_bounds(initial.size()),
+    upper_bounds(initial.size()),
+    oldPoint(&initial[0],initial.size()),
+    index(0),
+    dirCount(0),
+    probDim(initial.size()),
+    dirNum(initial.size()*2+1),
+    specialSet(false),
+    bestSet(false),
+    par(par),
+    best(make_pair(valarray<double>(&initial[0],initial.size()),0.)) {
+
+    specialDir[0] = 1;
+
+    std::vector<BoundsPair>::const_iterator it = bounds.begin();
+    for(int j = 0; it != bounds.end(); ++it, ++j) {
+        lower_bounds[j] = it->lowerBound();
+        upper_bounds[j] = it->upperBound();
+    }
+
+}
+
+std::vector<double> LocalCSMADPoll::nextPoint() {
+
+	if(!bestSet)
+		return vector<double>(&best.point()[0],&best.point()[best.point().size()]); //need to get the first value
+	
+    if(hasConverged())
+        return getBestPoint();
+
+    valarray<double> point(probDim);
+    do {
+
+        valarray<double> dir(probDim);
+		
+		if(index == dirNum -1) {
+			//consider special direction
+			//if it is set, use it
+			if(specialSet)
+				dir = specialDir;
+			else
+				//otherwise skip it
+				 index = (index + 1) % dirNum;
+		}
+			
+
+		//in case the special direction was skipped 
+        if(index < dirNum-1)
+            dir[index % probDim] = (index < probDim)? 1: -1;
+        
+//         cout << "-- using direction: " << index << endl;
+//         for(int i=0; i < dir.size(); ++i)
+//             cout << dir[i] << " ";
+//         cout << endl;
+
+        index = (index + 1) % dirNum;
+		++dirCount;
+
+        if(dirCount > dirNum) {
+            oldPoint = best.point();
+            alpha *= par.sigma;
+			dirCount = 0;
+			specialSet = false;
+//             cout << "alpha: " << alpha << endl;
+        }
+
+        point = best.point() + alpha * dir;
+
+
+    } while(!(isPointValid(point) || hasConverged()));
+
+    return (hasConverged())? getBestPoint(): vector<double>(&point[0],&point[point.size()]);
+
+}
+
+void LocalCSMADPoll::doFunctionComputed(const std::vector<double>& p , double value) {
+	
+	if(!bestSet) {
+		best = make_pair(best.point(),value);
+		bestSet = true;
+	}
+
+    valarray<double> point(&p[0],p.size());
+
+    if(value < best.value()) {
+		
+//  			cout << "accepting "<<index << endl;
+
+//         cout << "new best point along " << index << endl;
+
+        index = dirNum-1; //special direction
+        dirCount = 0;
+		if((oldPoint != best.point()).sum() > 0) { //avoid to duplicate directions
+			valarray<double> newDir = point - oldPoint;
+			specialDir = newDir / sqrt((newDir * newDir).sum());
+			specialSet = true;
+		}
+        best = make_pair(point,value);
+
+//         cout << "special direction: ";
+//         for(int i=0; i < specialDir.size(); ++i)
+//             cout << specialDir[i] << " ";
+//         cout << endl;
+    }
+}
+
+
+bool LocalCSMADPoll::isPointValid(const std::valarray<double>& point) {
+    return (point < lower_bounds || point > upper_bounds).sum() == 0;
+}
+
+bool LocalCSMADPoll::hasConverged() const {
+    return alpha < par.minStep;
+}
+
+
+double LocalCSMADPoll::getBestValue() const {
+    return best.value();
+}
+
+std::vector<double> LocalCSMADPoll::getBestPoint() const {
+    const valarray<double> &p = best.point();
+    return vector<double>(&p[0],&p[p.size()]);
+}
+
+}
+

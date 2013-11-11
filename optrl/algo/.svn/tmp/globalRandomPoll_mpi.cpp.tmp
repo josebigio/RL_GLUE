@@ -1,0 +1,185 @@
+#include <iostream>
+#include <pargo/RandomGlobalPoll.h>
+#include <pargo/LineSearchPoll.h>
+
+#include <pargo/MPIOptimizer.h>
+
+#include "GnuplotObserver.h"
+
+<<<<<<< .mine
+// #include "problems/CosMixModProblem.h"
+//#include "problems/ExpModProblem.h"
+=======
+//#include "problems/PinterProblem.h"
+//#include "problems/p15nLocMinProblem.h"
+//#include "problems/p10nLocMinProblem.h"
+//#include "problems/p5nLocMinProblem.h"
+//#include "problems/CosMixProblem.h"
+#include "problems/EsponProblem.h"
+>>>>>>> .r11862
+//#include "problems/QuarticProblem.h"
+//#include "problems/TreccaniProblem.h"
+//#include "problems/ZakharovProblem.h"
+//#include "problems/TridProblem.h"
+//#include "problems/SumSquaresProblem.h"
+//#include "problems/SphereProblem.h"
+//#include "problems/ShekelProblem.h"
+//#include "problems/SchwefelProblem.h"
+//#include "problems/RosenbrockProblem.h"
+//#include "problems/PowellProblem.h"
+//#include "problems/PermProblem.h"
+//#include "problems/MatyasProblem.h"
+//#include "problems/HumpProblem.h"
+//#include "problems/ColvilleProblem.h"
+//#include "problems/BraninProblem.h"
+//#include "problems/Bohachevsky3Problem.h"
+//#include "problems/Bohachevsky2Problem.h"
+//#include "problems/Bohachevsky1Problem.h"
+//#include "problems/BealeProblem.h"
+//#include "problems/RastriginProblem.h"
+//#include "problems/MichalewicsProblem.h"
+//#include "problems/LevyProblem.h"
+//#include "problems/Hartmann6Problem.h"
+//#include "problems/Hartmann3Problem.h"
+//#include "problems/GriewankProblem.h"
+//#include "problems/GoldsteinPriceProblem.h"
+//#include "problems/EasomProblem.h"
+//#include "problems/AckleyProblem.h"
+//#include "problems/DixonPriceProblem.h"
+#include "problems/BoothProblem.h"
+//#include "problems/SchubertPenalized2Problem.h"
+//#include "problems/SchubertPenalized1Problem.h"
+//#include "problems/SchubertProblem.h"
+//#include "problems/ShipProblem.h"
+//#include "problems/QuadraticProblem.h"
+//#include "problems/MultiModalGaussianProblem.h"
+
+#include <mpi.h>
+
+#include <vector>
+
+#include <stdlib.h>
+#include <time.h>
+
+#include <math.h>
+
+
+using namespace std;
+using namespace pargo;
+
+
+// algorithm settings
+unsigned long functionEvaluationsBudget = 100000;
+int populationSize = 50;
+double minimumDelta = 1;
+// end algorithm settings
+
+
+void run_master(const Problem *);
+
+void run_slave(const Problem *);
+
+int main() {
+    srand ( time(NULL) );
+
+<<<<<<< .mine
+	Problem * prob = new BoothProblem();
+=======
+    Problem * prob = new EsponProblem<2>();
+>>>>>>> .r11862
+
+    MPI::Init();
+
+
+
+    if(MPI::COMM_WORLD.Get_rank() == 0) {
+        run_master(prob);
+    }
+    else
+        run_mpi_slave(prob);
+
+
+    MPI::Finalize();
+
+    delete prob;
+
+    return 0;
+}
+
+void run_master(const Problem *prob) {
+
+    int dim=populationSize;
+	double minDelta = minimumDelta;
+
+    pargo::RandomGlobalPoll *poll;
+    poll = new pargo::RandomGlobalPoll(dim,prob->getBounds(),minDelta);
+
+	GnuplotObserver obs("points.txt");
+	poll->setObserver(obs);
+
+// 	vector<double> initial(prob->getn(),0);
+// 	poll = new LineSearchPoll(initial,prob->computef(initial));
+
+    //cout << "Family step prints:" << endl;
+
+    double t1 = MPI_Wtime();
+	
+	unsigned long maxIter = functionEvaluationsBudget;
+	
+    unsigned long count = run_mpi_master(poll,maxIter);
+	
+    double total = MPI_Wtime() - t1;
+
+	cout << endl;
+	cout << "Random Global Poll" << endl;
+	
+	cout << endl;
+	cout << "-- general configuration" << endl;
+	cout << "   function evaluations budget: " << maxIter << endl;
+	int s;
+	cout << "   number of parallel processes: " << (MPI_Comm_size(MPI_COMM_WORLD,&s),s) << endl;
+	cout << endl;
+
+	cout << "-- initial phase: create population" << endl;
+	cout << "   -- settings" << endl;
+	cout << "      population size: " << dim << endl;
+	cout << "   -- statistics" << endl;
+	cout << "      number of function evaluations: " << poll->getTimesInitialPopulation() << endl;
+	cout << "      delta: " << poll->getInitialDelta() << endl;
+	cout << "      best point: " ;
+	for (int i=0; i<prob->getn(); ++i) {
+        cout << poll->getInitialBestPoint()[i] << " ";
+    }
+    cout << endl;
+	cout << "      best value: " << poll->getInitialBestValue();
+	cout << endl << endl;
+
+
+	cout << "-- main phase: controlled random search" << endl;
+	cout << "   -- settings" << endl;
+	cout << "      minimum delta: " << minDelta << endl;
+	cout << "   -- statistics" << endl;
+    cout << "      number of function evaluations: " << count-poll->getTimesInitialPopulation() << endl;	
+	cout << "      delta: " << poll->getDelta() << endl;
+    cout << "      best point: " ;
+    for (int i=0; i<prob->getn(); ++i) {
+        cout << poll->getBestPoint()[i] << " ";
+    }
+    cout << endl;
+    cout << "      best value: " << poll->getBestValue() << endl;
+	cout << "      times a new point was accepted: " << poll->getTimesPointAccepted() << endl;
+	cout << "      times the best point was changed: " << poll->getTimesBestChanged() << endl;
+    cout << endl;
+
+	cout << "-- final statistics" << endl;
+    std::cout << "   total elapsed time: " << total << " seconds" << std::endl;
+    cout << "   total number of function evaluations: " << count << endl;	
+    cout << endl;
+
+    delete poll;
+
+}
+
+
+
+

@@ -1,0 +1,119 @@
+#include <pargo/ParallelOptimizer.h>
+
+#include <pargo/Poll.h>
+#include <pargo/Problem.h>
+
+#include <pthread.h>
+
+#include <vector>
+#include <stdexcept>
+
+using namespace std;
+
+namespace pargo {
+
+
+pthread_mutex_t parallalelOptMut = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  parallelOptCond   = PTHREAD_COND_INITIALIZER;
+
+typedef
+
+struct ParallelOptimizerParam {
+	const Problem *prob;
+	volatile unsigned int *threads;
+	std::list<VectorValuePair > *points;
+	vector<double> thisPoint;
+};
+
+
+
+static void *executeThread ( void *arg ) {
+
+	ParallelOptimizerParam *param = static_cast<ParallelOptimizerParam*> ( arg );
+
+	double val = param->prob->computef ( param->thisPoint );
+
+	pthread_mutex_lock ( &parallalelOptMut );
+
+	param->points->push_back ( make_pair ( param->thisPoint,val ) );
+	-- ( * ( param->threads ) );
+
+	pthread_cond_signal( &parallelOptCond );
+	pthread_mutex_unlock ( &parallalelOptMut );
+
+	delete param;
+}
+
+static void processPoints ( std::list<VectorValuePair>& points, Poll* poll ) {
+
+	while ( !points.empty() ) {
+
+		VectorValuePair &pair =  points.front();
+		poll->functionComputed ( pair.point(),pair.value() );
+
+		points.pop_front();
+
+	}
+}
+
+ParallelOptimizer::ParallelOptimizer ( unsigned int threadNumber ) :
+		maxThreadNumber ( threadNumber )  {
+
+	if ( maxThreadNumber == 0 )
+		throw invalid_argument ( "ParallelOptimizer: the number of threads must be greater than zero" );
+
+}
+
+unsigned long ParallelOptimizer::run (	const Problem* problem,
+									   Poll *poll,
+									   unsigned long maxEvaluations ) {
+
+	unsigned long evaluations = 0;
+
+	volatile unsigned int threads = 0;
+	std::list<VectorValuePair> points;
+	volatile bool active = true;
+
+	do {
+		if ( threads < maxThreadNumber ) { //some thread terminated
+
+			pthread_mutex_lock ( &parallalelOptMut );
+			processPoints ( points,poll );
+			pthread_mutex_unlock ( &parallalelOptMut );
+
+			if ( poll->hasConverged() || evaluations >= maxEvaluations ) {
+				active = false;
+			} else {
+
+				for ( int i = threads; i< maxThreadNumber && evaluations < maxEvaluations; ++i, ++evaluations ) {
+
+					ParallelOptimizerParam *param = new ParallelOptimizerParam();
+					param->points = &points;
+					param->prob = problem;
+					param->threads = &threads;
+					param->thisPoint = poll->nextPoint();
+
+					pthread_t thread_struct;
+
+					pthread_mutex_lock ( &parallalelOptMut );
+					++threads;
+					pthread_mutex_unlock ( &parallalelOptMut );
+
+					pthread_create ( &thread_struct, NULL, &executeThread, param );
+				}
+			}
+
+		}
+		else {
+		  pthread_mutex_lock ( &parallalelOptMut );
+		  if(threads == maxThreadNumber)
+			pthread_cond_wait( &parallelOptCond, &parallalelOptMut );
+		  pthread_mutex_unlock ( &parallalelOptMut );
+		}
+
+	} while ( active || threads > 0 );
+
+	return evaluations;
+}
+
+}

@@ -1,0 +1,113 @@
+#include "AckleyProblem.h"
+#include "DixonPriceProblem.h"
+#include "EsponProblem.h"
+#include "CosMixProblem.h"
+#include "GriewankProblem.h"
+#include "LevyProblem.h"
+#include "MichalewicsProblem.h"
+#include "PermProblem.h"
+#include "RastriginProblem.h"
+#include "RosenbrockProblem.h"
+#include "SchwefelProblem.h"
+#include "ShekelProblem.h"
+#include "SphereProblem.h"
+#include "SumSquaresProblem.h"
+#include "TridProblem.h"
+#include "ZakharovProblem.h"
+#include "p5nLocMinProblem.h"
+#include "p10nLocMinProblem.h"
+#include "p15nLocMinProblem.h"
+#include "PinterProblem.h"
+#include "FletcherPowellProblem.h"
+
+#include "ProblemStore.h"
+// template store example
+
+// pargo::ProblemStore ps_Ackley_2("Ackley_2",new pargo::AckleyProblem<2>());
+// pargo::ProblemStore ps_Ackley_10("Ackley_10",new pargo::AckleyProblem<10>());
+// pargo::ProblemStore ps_Ackley_30("Ackley_30",new pargo::AckleyProblem<30>());
+// pargo::ProblemStore ps_Ackley_50("Ackley_50",new pargo::AckleyProblem<50>());
+// 
+// pargo::ProblemStore ps_CosMix_2("CosMix_2",new pargo::CosMixProblem<2>());
+// pargo::ProblemStore ps_CosMix_4("CosMix_4",new pargo::CosMixProblem<4>());
+// 
+// pargo::ProblemStore ps_DixonPrice_2("DixonPrice_2",new pargo::DixonPriceProblem<2>());
+// pargo::ProblemStore ps_DixonPrice_10("DixonPrice_10",new pargo::DixonPriceProblem<10>());
+// pargo::ProblemStore ps_DixonPrice_25("DixonPrice_25",new pargo::DixonPriceProblem<25>());
+// pargo::ProblemStore ps_DixonPrice_50("DixonPrice_50",new pargo::DixonPriceProblem<50>());
+// 
+// pargo::ProblemStore ps_Espon_2("Espon_2",new pargo::EsponProblem<2>());
+// pargo::ProblemStore ps_Espon_4("Espon_4",new pargo::EsponProblem<4>());
+
+pargo::ProblemStore ps_FletcherPowell_2("FletcherPowell_2",new pargo::FletcherPowellProblem<2>());
+pargo::ProblemStore ps_FletcherPowell_5("FletcherPowell_5",new pargo::FletcherPowellProblem<5>());
+pargo::ProblemStore ps_FletcherPowell_10("FletcherPowell_10",new pargo::FletcherPowellProblem<10>());
+/*
+pargo::ProblemStore ps_Griewank_2("Griewank_2",new pargo::GriewankProblem<2>());
+pargo::ProblemStore ps_Griewank_5("Griewank_5",new pargo::GriewankProblem<5>());
+pargo::ProblemStore ps_Griewank_10("Griewank_10",new pargo::GriewankProblem<10>());
+pargo::ProblemStore ps_Griewank_20("Griewank_20",new pargo::GriewankProblem<20>());
+
+pargo::ProblemStore ps_Levy_2("Levy_2",new pargo::LevyProblem<2>());
+pargo::ProblemStore ps_Levy_5("Levy_5",new pargo::LevyProblem<5>());
+pargo::ProblemStore ps_Levy_10("Levy_10",new pargo::LevyProblem<10>());
+
+pargo::ProblemStore ps_Michalewics_2("Michalewics_2",new pargo::MichalewicsProblem<2>());
+pargo::ProblemStore ps_Michalewics_5("Michalewics_5",new pargo::MichalewicsProblem<5>());
+pargo::ProblemStore ps_Michalewics_10("Michalewics_10",new pargo::MichalewicsProblem<10>());
+
+pargo::ProblemStore ps_p5nLocMin_2("p5nLocMin_2",new pargo::p5nLocMinProblem<2>());
+pargo::ProblemStore ps_p5nLocMin_5("p5nLocMin_5",new pargo::p5nLocMinProblem<5>());
+pargo::ProblemStore ps_p5nLocMin_10("p5nLocMin_10",new pargo::p5nLocMinProblem<10>());
+pargo::ProblemStore ps_p5nLocMin_20("p5nLocMin_20",new pargo::p5nLocMinProblem<20>());
+
+pargo::ProblemStore ps_p10nLocMin_2("p10nLocMin_2",new pargo::p10nLocMinProblem<2>());
+pargo::ProblemStore ps_p10nLocMin_5("p10nLocMin_5",new pargo::p10nLocMinProblem<5>());
+pargo::ProblemStore ps_p10nLocMin_10("p10nLocMin_10",new pargo::p10nLocMinProblem<10>());
+pargo::ProblemStore ps_p10nLocMin_20("p10nLocMin_20",new pargo::p10nLocMinProblem<20>());
+
+pargo::ProblemStore ps_p15nLocMin_2("p15nLocMin_2",new pargo::p15nLocMinProblem<2>());
+pargo::ProblemStore ps_p15nLocMin_5("p15nLocMin_5",new pargo::p15nLocMinProblem<5>());
+pargo::ProblemStore ps_p15nLocMin_10("p15nLocMin_10",new pargo::p15nLocMinProblem<10>());
+pargo::ProblemStore ps_p15nLocMin_20("p15nLocMin_20",new pargo::p15nLocMinProblem<20>());
+
+pargo::ProblemStore ps_Perm_2("Perm_2",new pargo::PermProblem<2>());
+pargo::ProblemStore ps_Perm_5("Perm_5",new pargo::PermProblem<5>());
+pargo::ProblemStore ps_Perm_10("Perm_10",new pargo::PermProblem<10>());
+
+pargo::ProblemStore ps_Pinter_2("Pinter_2",new pargo::PinterProblem<2>());
+pargo::ProblemStore ps_Pinter_5("Pinter_5",new pargo::PinterProblem<5>());
+pargo::ProblemStore ps_Pinter_10("Pinter_10",new pargo::PinterProblem<10>());
+
+pargo::ProblemStore ps_Rastrigin_2("Rastrigin_2",new pargo::RastriginProblem<2>());
+pargo::ProblemStore ps_Rastrigin_10("Rastrigin_10",new pargo::RastriginProblem<10>());
+pargo::ProblemStore ps_Rastrigin_30("Rastrigin_30",new pargo::RastriginProblem<30>());
+pargo::ProblemStore ps_Rastrigin_50("Rastrigin_50",new pargo::RastriginProblem<50>());
+
+pargo::ProblemStore ps_Rosenbrock_2("Rosenbrock_2",new pargo::RosenbrockProblem<2>());
+pargo::ProblemStore ps_Rosenbrock_5("Rosenbrock_5",new pargo::RosenbrockProblem<5>());
+pargo::ProblemStore ps_Rosenbrock_10("Rosenbrock_10",new pargo::RosenbrockProblem<10>());
+
+pargo::ProblemStore ps_Schwefel_2("Schwefel_2",new pargo::SchwefelProblem<2>());
+pargo::ProblemStore ps_Schwefel_5("Schwefel_5",new pargo::SchwefelProblem<5>());
+pargo::ProblemStore ps_Schwefel_10("Schwefel_10",new pargo::SchwefelProblem<10>());
+
+pargo::ProblemStore ps_Shekel_5("Shekel_5",new pargo::ShekelProblem<5>());
+pargo::ProblemStore ps_Shekel_7("Shekel_7",new pargo::ShekelProblem<7>());
+pargo::ProblemStore ps_Shekel_10("Shekel_10",new pargo::ShekelProblem<10>());
+
+pargo::ProblemStore ps_Sphere_2("Sphere_2",new pargo::SphereProblem<2>());
+pargo::ProblemStore ps_Sphere_5("Sphere_5",new pargo::SphereProblem<5>());
+pargo::ProblemStore ps_Sphere_10("Sphere_10",new pargo::SphereProblem<10>());
+
+pargo::ProblemStore ps_SumSquares_2("SumSquares_2",new pargo::SumSquaresProblem<2>());
+pargo::ProblemStore ps_SumSquares_5("SumSquares_5",new pargo::SumSquaresProblem<5>());
+pargo::ProblemStore ps_SumSquares_10("SumSquares_10",new pargo::SumSquaresProblem<10>());
+
+pargo::ProblemStore ps_Trid_2("Trid_2",new pargo::TridProblem<2>());
+pargo::ProblemStore ps_Trid_5("Trid_5",new pargo::TridProblem<5>());
+pargo::ProblemStore ps_Trid_10("Trid_10",new pargo::TridProblem<10>());
+
+pargo::ProblemStore ps_Zakharov_2("Zakharov_2",new pargo::ZakharovProblem<2>());
+pargo::ProblemStore ps_Zakharov_5("Zakharov_5",new pargo::ZakharovProblem<5>());
+pargo::ProblemStore ps_Zakharov_10("Zakharov_10",new pargo::ZakharovProblem<10>());*/

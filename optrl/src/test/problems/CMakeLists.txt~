@@ -1,0 +1,5 @@
+
+SET( test_SRC ${test_SRC}
+	${CMAKE_CURRENT_SOURCE_DIR}/QuadraticProblem.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/checkTemplates.cpp
+PARENT_SCOPE)

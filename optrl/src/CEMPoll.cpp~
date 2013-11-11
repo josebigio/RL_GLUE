@@ -1,0 +1,59 @@
+#include <pargo/CEMPoll.h>
+
+#include <gsl/gsl_rng.h>
+
+using namespace std;
+
+namespace pargo {
+
+CEMPoll::CEMPoll (const std::vector<BoundsPair> &bounds, const std::vector<double> &initial, const CEMPoll::ParamType& par ) :
+    par ( par ),
+    best(make_pair(initial,0.)),
+    lower_bounds ( bounds.size() ),
+    upper_bounds ( bounds.size() ),
+    centre(&initial[0],initial.size()),
+    sigma(par.sigma,initial.size()),
+    lastPoints(){
+
+    std::vector<BoundsPair>::const_iterator it = bounds.begin();
+    for ( int j = 0; it != bounds.end(); ++it, ++j )
+    {
+        lower_bounds[j] = it->lowerBound();
+        upper_bounds[j] = it->upperBound();
+    }
+    
+    gsl_rng_env_setup();
+	const gsl_rng_type * T = gsl_rng_default;
+	r = gsl_rng_alloc (T);
+     
+}
+
+
+std::vector<double> CEMPoll::nextPoint() {
+	
+	vector<double> res;
+	
+	
+    
+    double u = gsl_rng_uniform (r);
+
+     
+       
+     
+       return 0;
+	
+	if(lastPoints.size() < par.iterations) {
+		for( int i=0, size = centre.size(); i<size; ++i) {
+
+			normal_distribution<double> dist(centre[i],sigma[i]);
+			dist(eng);
+			//res.push_back(
+		}
+	}
+	
+	gsl_rng_free (r);
+}
+
+}
+
+

@@ -1,0 +1,78 @@
+#include <pargo/AsynchCoordSearchAlg.h>
+
+#include <limits>
+#include <iostream>
+
+namespace pargo {
+
+using namespace std;
+
+AsynchCoordSearchAlg::AsynchCoordSearchAlg ( const std::vector<double>& initial,
+		double initialStep,
+		double minStep,
+		double theta ) :
+
+		theta ( theta ),
+		minStep ( minStep ),
+		step ( initialStep ),
+		best ( initial ),
+		last ( initial ),
+		centre(),
+		bestValue ( numeric_limits<double>::infinity() ),
+		stage (0),
+		offset (0){}
+
+std::vector<double> AsynchCoordSearchAlg::nextPoint() {
+
+	if ( step < minStep )
+		return best;
+
+	if ( centre.empty() ) {
+		centre = last;
+	} else {
+		int pos = (stage + offset) % (2*best.size());
+		int k = pos/2;
+		
+// 		cout << "pos " << pos << " stage " << stage << " offset " << offset << endl;
+
+		last = centre;
+		last[k] += ( ( pos & 1 ==1 ) ?1:-1 ) *step;
+	}
+	return last;
+
+}
+
+void AsynchCoordSearchAlg::functionComputed ( double value ) {
+	if ( value < bestValue ) {
+		bestValue = value;
+		best = last;
+		
+		cout << value << " " << step << endl;
+
+		offset = stage;
+		stage = 0;
+		centre = best;
+		return;
+	} else {
+		++stage;
+	}
+
+	if ( stage >= 2*best.size() ) {
+		step*=theta;
+		stage = 0;
+		cout << value << " " << step << endl;
+	}
+}
+
+bool AsynchCoordSearchAlg::hasConverged() {
+	return step < minStep;
+}
+
+double AsynchCoordSearchAlg::getBestValue() {
+	return bestValue;
+}
+std::vector<double> AsynchCoordSearchAlg::getBestPoint() {
+	return best;
+}
+
+}

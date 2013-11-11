@@ -1,0 +1,57 @@
+#ifndef pargo_LocalSifonePoll_h__guard
+#define pargo_LocalSifonePoll_h__guard
+
+#include <pargo/Poll.h>
+#include <pargo/PointValuePair.h>
+#include <pargo/BoundsPair.h>
+
+#include <valarray>
+
+namespace pargo {
+
+struct LocalCSMADPollParams {
+
+    LocalCSMADPollParams() :
+        initialStep(1.),
+        minStep(1e-3),
+        sigma(0.5){}
+		
+    double initialStep,minStep,sigma;
+};
+	
+class  LocalCSMADPoll : public Poll {
+
+public:
+	
+	typedef LocalCSMADPollParams ParamType;
+	
+	LocalCSMADPoll(const std::vector<BoundsPair> & bounds, const std::vector<double> & intial, double initV, const ParamType& par = ParamType());
+	LocalCSMADPoll(const std::vector<BoundsPair> & bounds, const std::vector<double> & initial,const ParamType& par = ParamType());
+	std::vector<double> nextPoint();
+
+    bool hasConverged() const;
+
+    double getBestValue() const;
+    std::vector<double> getBestPoint() const;
+
+private:
+	
+	double alpha;
+	std::valarray<double> specialDir, lower_bounds, upper_bounds,oldPoint;
+	unsigned int index, dirCount, probDim, dirNum;
+	bool specialSet, bestSet;
+	ParamType par;
+	
+	ValarrayValuePair best;
+	
+    void doFunctionComputed(const std::vector<double>& , double value);
+	bool isPointValid(const std::valarray<double>& );
+
+};
+
+//for backward compatibility, this was the previous name
+typedef LocalCSMADPoll LocalSifonePoll;
+
+}
+
+#endif

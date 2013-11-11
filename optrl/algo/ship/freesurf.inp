@@ -1,0 +1,22 @@
+------------------------------------------------
+- File di input per FreeSurf -
+------------------------------------------------
+ 3              | Pannelli in direzione trasversale (interni)
+ 33             | Pannelli in direzione trasversale (esterni)
+ 20             | Pannelli lungo la carena
+ 20             | Pannelli a monte
+ 80             | Pannelli a valle
+------------------------------------------------
+  0             | Pannelli fantasma
+------------------------------------------------
+ -1.5           | X minima
+  3.5           | X massima
+  0.0           | Y minima
+  1.5           | Y massima
+------------------------------------------------
+  0.0           | Inclinazione griglia
+------------------------------------------------
+    0           | Scrittura dati.
+------------------------------------------------
+    1.          | Parametro di stretch
+------------------------------------------------

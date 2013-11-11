@@ -1,0 +1,29 @@
+#include <PollCoordsLight.h>
+
+#include "Problem.h"
+
+#include <cmath>
+
+
+namespace pargo {
+
+
+int PollCoordsLight::computepoll(const std::vector<double>& xin, const double fin, const double stepsize,const Problem& prob)
+{
+	
+    xout =xin;
+	
+    for (unsigned int i=0, size=xin.size(); i<2*n; ++i) {
+        int k=i/2;
+        xout[k]=xin[k]+pow(-1,i)*stepsize;
+        fout = prob.computef(xout);
+
+        if (fout < fin) {
+            return 1;
+        }
+        xout[k]=xin[k];
+    }
+    return 0;
+}
+
+}

@@ -1,0 +1,55 @@
+
+#include <CoordinateSearchAlgorithm.h>
+#include <Problem.h>
+
+#include <iostream>
+
+#include <algorithm>
+#include <iterator>
+
+using namespace std;
+using namespace pargo;
+
+struct  TestProblem : public Problem {
+  
+int getn() const { return 2; }
+
+double computef(const std::vector<double>& x) const {
+    return x[0]*x[0]+x[1]*x[1]-2*x[0]+3*x[1];
+// 	static int count = 0;
+// 	std::cout << "valutazione " << ++count << std::endl; 
+}
+
+  
+};
+
+int main ( int argc, char* argv[] ) {
+
+
+	cout << "Coordinate-search method" << endl;
+
+
+	int startvalue=0;
+	if ( argc>1 ) startvalue=atoi ( argv[1] );
+
+	Problem * prob = new TestProblem();
+	vector<double> initial;
+
+	fill_n ( back_inserter ( initial ),prob->getn(),startvalue );
+
+	CoordinateSearchAlgorithm alg ( prob );
+	alg.run ( initial );
+
+
+	cout << endl << "iterations = " << alg.getiter() << endl;
+	cout << "f = " << alg.getf() << endl;
+	cout << "x = [ ";
+	for ( unsigned int i=0; i<alg.getn(); ++i ) {
+		cout << alg.getx() [i] << " ";
+	}
+	cout << "]" << endl;
+	
+	delete prob;
+
+	return 0;
+}

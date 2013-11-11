@@ -1,0 +1,333 @@
+#include <pargo/LineSearchPoll.h>
+
+#include <algorithm>
+#include <iostream>
+#include <valarray>
+
+#include <cmath>
+#include <cstring>
+
+using namespace std;
+
+namespace pargo  {
+
+template <typename T>
+static valarray<T> vecToVal ( const vector<T>& v ) {
+	return valarray<T> ( &v[0],v.size() );
+}
+
+template <typename T>
+static vector<T> valToVec ( const valarray<T>& v ) {
+	return vector<T> ( &v[0],&v[v.size()] );
+}
+
+bool ValarrayLess::operator() ( const valarray<double>&a, const valarray<double>&b ) {
+
+	if ( a.size() != b.size() )
+		return a.size() < b.size();
+
+	valarray<bool> comp = ( a != b ) ;
+
+	if ( comp.sum() == 0 )
+		return false; //arrays are equal
+
+	//TODO consider double precision equality issues here
+	return a[comp][0] > b[comp][0]; //slice and get the first different element
+}
+
+
+
+
+static double norm ( const valarray<double>& v ) {
+	return sqrt ( pow ( v,2. ).sum() );
+}
+
+// int LineSearchPoll::k() {
+//     return dir % bestPoint.point().size();
+// }
+//
+// int LineSearchPoll::ksign() {
+//     return ( dir < bestPoint.point().size() ) ? 1 : -1;
+// }
+
+LineSearchPoll::LineSearchPoll ( const std::vector<double>& initial,
+								 double initValue,
+								 const LineSearchPoll::ParamType& p
+							   ) :
+	phase ( 0 ),
+	activePoints(),
+	converged(),
+	bestPoint ( make_pair ( vecToVal ( initial ), initValue ) ),
+	centre ( bestPoint ),
+	bestClose ( bestPoint ),
+	alpha (),
+	p ( p ),
+	dir ( 0 ),
+	ring ( 0 ),
+	dirBase ( 0 ) {
+
+	for ( int i = 0; i< 2*initial.size(); ++i ) {
+		valarray<double> unit_vector ( initial.size() );
+		unit_vector[i%initial.size()] = ( i < initial.size() ) ? 1:-1;
+		alpha[unit_vector] = p.initialStep;
+	}
+
+	minAlpha =alpha;
+}
+
+LineSearchPoll::LineSearchPoll ( const std::vector<double>& initial, double initValue,
+								 const std::vector< std::vector<double> >& dirs,
+								 const LineSearchPoll::ParamType& p ) :
+	phase ( 0 ),
+	activePoints(),
+	converged(),
+	bestPoint ( make_pair ( vecToVal ( initial ), initValue ) ),
+	centre ( bestPoint ),
+	bestClose ( bestPoint ),
+	alpha (),
+	p ( p ),
+	dir ( 0 ),
+	ring ( 0 ),
+	dirBase ( 0 ) {
+
+	std::vector< std::vector<double> >::const_iterator vIt;
+	for ( vIt = dirs.begin(); vIt != dirs.end(); ++vIt ) {
+		valarray<double> v ( vecToVal ( *vIt ) );
+		v /= norm ( v );
+		alpha[v] = p.initialStep;
+	}
+
+	minAlpha =alpha;
+}
+
+
+std::vector<double> LineSearchPoll::nextPoint() {
+
+	if ( hasConverged() )
+		return valToVec ( bestPoint.point() );
+
+	double alpha_p;
+
+	unsigned int initDir = dir;
+	std::map<std::valarray<double>, double, ValarrayLess>::iterator distIt;
+
+// 	cout << "initDir " << initDir << endl;
+	bool expanding;
+
+	if ( phase ==0 && dir ==0 ) //or any expanding phase
+		ring+= alpha.size();
+
+	do {
+
+	unsigned int step = ( dir + dirBase ) % alpha.size();
+
+// 		cout << "step " << step << " dir " << dir << " dirBase " << dirBase << " phase " << phase << endl;
+
+	distIt = alpha.begin();
+	advance ( distIt,step );
+
+	dir = ( dir + 1 ) % ( alpha.size() );
+
+	if ( phase == 0 /*(phase & 0x1)^ 0x1*/ ) { // even number: expansion
+		alpha_p = distIt->second /* * pow(delta,phase/2)*/;
+		expanding = true;
+	} else {
+		alpha_p = distIt->second * pow ( p.theta, phase );
+		expanding = false;
+	}
+
+
+	if ( dir == 0 )
+		++phase;
+
+// 	cout << "alpha " << alpha_p << " dir " << dir << endl;
+
+	} while ( !expanding && (converged.find(distIt->first) != converged.end())  && dir != initDir );
+
+	if ( (converged.find(distIt->first) != converged.end()) && !expanding ) {
+		return valToVec ( bestPoint.point() ); //same as hasConverged
+	}
+
+	valarray<double> point = centre.point() + alpha_p * distIt->first; //directions must be unit vectors
+
+
+	activePoints.insert ( point );
+
+// 	cout << "direction: ";
+// 	for ( int i=0, size=distIt->first.size(); i<size; ++i )
+// 		cout << distIt->first[i] << " ";
+// 	cout << endl;
+
+	return valToVec ( point );
+}
+
+
+void LineSearchPoll::doFunctionComputed ( const std::vector<double>& lastVec , double value ) {
+
+// 	cout << "point: ";
+// 	vector<double>::const_iterator it;
+// 	for ( it = lastVec.begin(); it!= lastVec.end(); ++it )
+// 		cout << *it << " ";
+// 	cout << " value: " << value <<endl;
+
+	if ( hasConverged() )
+		return;
+
+	valarray<double> last ( vecToVal ( lastVec ) );
+
+	//check whether it is relative to the current centre
+	if ( activePoints.find ( last ) == activePoints.end() ) {
+// 		cout << "old, discarded" << endl;
+		return; // the point is too old, discard it
+	}
+	activePoints.erase(last); //a point may happen twice!
+
+	if ( value < bestPoint.value() ) {
+		bestPoint = make_pair ( last,value ); //how does this work with noise?
+// 		cout << "best updated" << endl;
+	}
+
+	//compute  alpha and direction
+	valarray<double> diff = last - centre.point();
+	double alpha_p = norm ( diff );
+
+//     cout << "alpha_p: " << alpha_p << endl;
+
+	valarray<double> direction = diff / alpha_p;
+
+//     cout << "direction: ";
+//     for(int i=0, size=direction.size(); i<size; ++i)
+//         cout << direction[i] << " ";
+//     cout << endl;
+
+	bool expansion = alpha_p >= alpha[direction];
+
+//     cout << "expansion: " << expansion << endl;
+
+	if ( alpha_p == alpha[direction] )
+		--ring; // we received a point from the expanding ring
+
+// 	cout << "ring: " << ring << endl;
+
+	if ( alpha_p < minAlpha[direction] ) {
+		minAlpha[direction] = alpha_p;
+// 		cout << "minAlpha: " << minAlpha[direction] << endl;
+	}
+
+	if(alpha_p < p.minStep) {
+		converged.insert(direction);
+// 		cout << "direction converged ";
+// 		for ( int i=0, size=direction.size(); i<size; ++i )
+// 			cout << direction[i] << " ";
+// 		cout << endl;
+	}
+
+
+	bool condition = testConditionOn ( value,alpha_p );
+// 	cout << "condition " << condition << endl;
+
+
+	if ( condition && ( expansion || ( !expansion && ring == 0 ) ) ) {
+
+// 		cout << "moving " << expansion << endl;
+		moveCentre ( make_pair ( last,value ),expansion,direction,alpha_p );
+
+	} else if ( expansion && ring == 0 && bestClose.value() < centre.value() ) { // and !condition
+
+// 		cout << "best close value: " << bestClose.value() << endl;
+
+		//the expanding ring has been received let's check for the best non expanding point
+		valarray<double> closeDiff = bestClose.point() - centre.point();
+		double closeAlpha_p = norm ( closeDiff );
+
+		if ( testConditionOn ( bestClose.value(),closeAlpha_p ) ) {
+
+			valarray<double> closeDirection = closeDiff / closeAlpha_p;
+// 			cout << "moving in ring" << endl;
+			moveCentre ( bestClose,false,closeDirection,closeAlpha_p );
+		}
+
+	} else if ( !expansion  &&  ring > 0 && value < bestClose.value() ) { //and !condition
+		bestClose = make_pair ( last,value );
+	}
+}
+
+void LineSearchPoll::moveCentre ( const ValarrayValuePair& lastPoint, bool expansion, const std::valarray<double>& direction, double alpha_p ) {
+
+// 	cout << "************* direction ";
+// 	for ( int i=0, size=direction.size(); i<size; ++i )
+// 		cout << direction[i] << " ";
+// 	cout << endl;
+
+// 	cout << "************* alpha before " << alpha[direction] << endl ;
+
+	alpha[direction] = ( expansion ) ? alpha_p * p.delta : alpha_p; //theta is already in alpha_p
+	centre= lastPoint;
+
+// 	cout << "************* alpha after " << alpha[direction]  << endl;
+
+// 	cout << "************* new centre ";
+// 	for ( int i=0, size = centre.point().size(); i< size; ++i )
+// 		cout << centre.point() [i] << " ";
+// 	cout << endl;
+
+	if ( expansion )
+		dirBase = distance ( alpha.begin(), alpha.find ( direction ) );
+	else {
+		dirBase = 0;
+		std::map<std::valarray<double>, double, ValarrayLess>::const_iterator it = minAlpha.begin();
+		for ( ; it != minAlpha.end(); ++it ) {
+
+// 			cout << "alpha before " << alpha[it->first] << endl ;
+			if ( (it->first != direction).sum() > 0 )
+				alpha[it->first] = it->second;
+// 			cout << "alpha after " << alpha[it->first] << endl ;
+
+		}
+	}
+
+	dir = 0;
+	phase = 0;
+	ring=0;
+	minAlpha = alpha;
+	activePoints.clear();
+	converged.clear();
+	bestClose = centre;
+
+// 	cout << "new alpha: " <<  alpha[direction] << endl;
+}
+
+bool LineSearchPoll::testConditionOn ( double value, double alpha_p ) {
+	
+// 	cout << "condition, value:" << value << " centre value: " << centre.value() << endl;
+	
+	return ( ( value - centre.value() ) <= ( -p.gamma * alpha_p * alpha_p ) );
+
+	//Matteo: we had this before, but it looks unsafe with the parallel version, if we store the
+	// current best point indipendently from the centre
+
+	/*&& ( value < bestPoint.value() )*/
+}
+
+bool LineSearchPoll::hasConverged() const {
+	return converged.size() == alpha.size();
+}
+
+double LineSearchPoll::getBestValue() const {
+	return bestPoint.value();
+}
+std::vector<double> LineSearchPoll::getBestPoint() const {
+	return valToVec ( bestPoint.point() );
+}
+
+std::vector<double> LineSearchPoll::getCentre() const {
+	return valToVec ( centre.point() );
+}
+double LineSearchPoll::getCentreValue() const {
+	return centre.value();
+}
+
+}
+
+
+

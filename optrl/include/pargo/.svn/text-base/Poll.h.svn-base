@@ -1,0 +1,39 @@
+#ifndef pargo_Poll_h__guard
+#define pargo_Poll_h__guard
+
+#include <vector>
+
+namespace pargo {
+
+class PollObserver;
+
+class  Poll {
+
+public:
+
+    Poll();
+
+    virtual std::vector<double> nextPoint() = 0;
+
+    void functionComputed(const std::vector<double>& , double value);
+
+    virtual bool hasConverged() const = 0;
+
+    virtual double getBestValue() const = 0;
+    virtual std::vector<double> getBestPoint() const = 0;
+
+    void setObserver(PollObserver*);
+
+    void deleteObserver();
+
+    virtual ~Poll();
+
+private:
+    virtual void doFunctionComputed(const std::vector<double>& , double value) = 0;
+
+    PollObserver *observer;
+
+};
+}
+
+#endif

@@ -1,0 +1,323 @@
+#include <pargo/Population.h>
+
+#include <pargo/Problem.h>
+
+#include <iostream>
+
+
+
+#include <algorithm>
+#include <stdexcept>
+#include <numeric>
+
+using namespace std;
+
+namespace pargo {
+
+
+Population::Population ( const int dim, const std::vector<double> & lb, const std::vector<double> & ub ) :
+		n ( lb.size() ),
+		dimPopul ( dim ),
+		population(),
+		idxmax(),
+		idxmin(),
+		delta ( 0 ),
+		deltaInit ( 0 ),
+		lb ( lb ),
+		ub ( ub ) {
+	if ( lb.size() != ub.size() )
+		throw runtime_error ( "lower and upper buond array have different sizes" );
+
+};
+
+vector<double> Population::randomPoint() {
+
+	vector<double> point;
+
+	for ( int i=0; i<n; ++i ) {
+		point.push_back ( rand() * ( ( ub[i]-lb[i] ) /RAND_MAX ) + lb[i] );
+	}
+
+	return point;
+}
+
+std::set<Population::PopulationType::iterator> Population::createFamilySet ( int size ) {
+
+	std::set<Population::PopulationType::iterator> idxFamily;
+
+	double coeff= static_cast<double> ( dimPopul ) /RAND_MAX;
+
+	while ( idxFamily.size() <size ) {
+
+		int valIdx= static_cast<int> ( rand() *coeff );
+
+		if ( valIdx==dimPopul ) valIdx--;
+
+		Population::PopulationType::iterator chosen = population.begin();
+		advance ( chosen, valIdx );
+		idxFamily.insert ( chosen );
+
+	}
+
+//     std::cout << "family idx:" << std::endl;
+//     set<PopulationType::iterator>::iterator itIdxFamilyP;
+//
+//     for ( itIdxFamilyP=idxFamily.begin(); itIdxFamilyP != idxFamily.end(); ++itIdxFamilyP ) {
+//         std::cout << distance(population.begin(), (*itIdxFamilyP)) << " ";
+//     }
+//     std::cout << std::endl;
+
+	return idxFamily;
+}
+
+bool operator< ( const Population::PopulationType::value_type & a, const  Population::PopulationType::value_type& b ) {
+	return a.value() < b.value();
+}
+
+struct PopulationIteratorLess {
+
+	bool operator() ( const Population::PopulationType::iterator& a,const Population::PopulationType::iterator& b ) {
+		return a->value() < b->value();
+	}
+
+};
+
+struct EtaGenerator {
+	double fmin;
+	double phi;
+
+	explicit EtaGenerator ( double fmin, double phi ) :
+			fmin ( fmin ),
+			phi ( phi ) {}
+
+	double operator() ( const Population::PopulationType::iterator& idx ) {
+		return 1./ ( idx->value() - fmin + phi );
+	}
+
+};
+
+struct WeightGenerator {
+	double sumEta;
+
+	explicit WeightGenerator ( double sum ) : sumEta ( sum ) {}
+
+	double operator() ( double eta ) {
+		return eta/sumEta;
+	}
+
+};
+
+static vector<double> createCentroid ( const set<Population::PopulationType::iterator>& idxFamily,
+									   const std::vector<double>& weight ) {
+
+	set<Population::PopulationType::iterator>::const_iterator itIdxFamily=idxFamily.begin();
+
+	std::vector<double> centroid ( ( *itIdxFamily )->point().size(), 0 );
+
+	std::vector<double>::const_iterator itWeight =  weight.begin();
+
+	for ( ; itIdxFamily != idxFamily.end(); ++itIdxFamily, ++itWeight )
+		for ( int i=0; i< ( *itIdxFamily )->point().size(); ++i )
+			centroid[i] += ( ( *itIdxFamily )->point() ) [i] * ( *itWeight );
+
+//         std::cout << "centroid:" << std::endl;
+//         for (int j=0; j<n; ++j) {
+//             std::cout << centroid[j] << " ";
+//         }
+//         std::cout << std::endl;
+
+
+	return centroid;
+}
+
+static double computeSumFWeights ( const set<Population::PopulationType::iterator>& idxFamily,
+								   const std::vector<double>& weight ) {
+	double sumFWeights = 0;
+	set<Population::PopulationType::iterator>::const_iterator itIdxFamily =idxFamily.begin();
+	std::vector<double>::const_iterator itWeight =  weight.begin();
+	for ( ; itIdxFamily != idxFamily.end(); ++itIdxFamily, ++itWeight )
+		sumFWeights += ( *itIdxFamily )->value() * ( *itWeight );
+
+	return sumFWeights;
+}
+
+static vector<double> computeNewPoint ( const vector<double>& centroid,
+										double alpha,
+										const vector<double>& maxPoint ) {
+// compute new point
+	std::vector<double> newPoint;
+	for ( int i=0, size = centroid.size(); i<size; ++i ) {
+		double val = centroid[i] - alpha* ( maxPoint[i]-centroid[i] );
+		newPoint.push_back ( val );
+	}
+
+	return newPoint;
+}
+
+bool Population::isPointValid ( const vector<double>& point ) {
+
+	for ( int i=0, size = point.size(); i < size; ++i )
+		if ( point[i] < lb[i] || point[i] > ub[i] )
+			return false;
+
+	cout << "valid " << endl;
+	return true;
+}
+
+std::vector<double> Population::computeFamilyStepPoint ( const int size ) {
+
+	std::vector<double> newPoint;
+	do {
+
+		// create family index set
+		set<Population::PopulationType::iterator>  idxFamily = createFamilySet ( size );
+
+		// find max idx in family
+		Population::PopulationType::iterator idxmaxFam= *max_element (	idxFamily.begin(),
+											idxFamily.end(),
+											PopulationIteratorLess() );
+
+		// compute centroid family
+		cout << "deltaInit: " << deltaInit << " delta: " << delta << endl;
+
+		double phi = n*delta*delta/deltaInit;
+
+		std::vector<double> eta;
+
+		transform ( idxFamily.begin(), idxFamily.end(),back_inserter ( eta ),
+					EtaGenerator ( idxmin->value(),phi ) );
+
+
+		double sumEta = accumulate ( eta.begin(),eta.end(),0. );
+
+
+		// compute weights
+		std::vector<double> weight;
+		transform ( eta.begin(),eta.end(),back_inserter ( weight ),WeightGenerator ( sumEta ) );
+
+// 		cout << "***family" << endl;
+// 		set<int>::iterator itIdxFamily=idxFamily.begin();
+// 		for (; itIdxFamily != idxFamily.end(); ++itIdxFamily) {
+// 		 for(size_t i =0; i<popul[*itIdxFamily].size(); ++i)
+// 		   cout << popul[*itIdxFamily][i] << " " ;
+//
+// 		 cout << endl;
+//
+// 		}
+
+
+		// compute centroid
+		std::vector<double> centroid = createCentroid ( idxFamily,weight );
+
+
+
+		// compute new point (reflex max idx in family with centroid family)
+		// compute stepsize
+		double sumFWeights = computeSumFWeights ( idxFamily,weight );
+
+		double alpha = 1 - ( idxmaxFam->value() - sumFWeights ) / ( delta+phi );
+
+		// compute new point
+		newPoint =  computeNewPoint ( centroid,alpha,idxmaxFam->point() );
+
+		/*std::cout << "new point:" << std::endl;
+		for (int j=0; j<n; ++j) {
+			std::cout << newPoint[j] << " ";
+		}
+		std::cout << std::endl;*/
+
+	} while ( !isPointValid ( newPoint ) );
+
+	// compute function in new point
+	return newPoint;
+}
+
+int Population::computedFamilyStepFunction ( const std::vector<double>& newPoint,
+		double fNewPoint ) {
+
+	cout << "f popul max before " << idxmax->value() << endl;
+
+	if ( fNewPoint < idxmax->value() ) {
+
+		/*std::cout << "family idx:" << std::endl;
+		std::set<int>::iterator itIdxFamilyP;
+		for ( itIdxFamilyP=idxFamily.begin()++; itIdxFamilyP != idxFamily.end(); ++itIdxFamilyP ) {
+		    std::cout << *itIdxFamilyP << " ";
+		}
+		std::cout << std::endl;*/
+		( *idxmax ) = make_pair ( newPoint, fNewPoint );
+
+		if ( fNewPoint < idxmin->value() )
+			idxmin = idxmax;
+
+		idxmax = max_element ( population.begin(), population.end() );
+
+		cout << "f popul max after " << idxmax->value() << endl;
+		cout << "f popul min " << idxmin->value() << endl;
+
+
+		delta = idxmax->value() - idxmin->value();
+
+		return 0;
+	}
+	return 1;
+}
+
+
+
+std::vector<double> Population::nextPoint() {
+
+	if ( population.size() < dimPopul )
+		return randomPoint();
+
+	return computeFamilyStepPoint ( std::min ( n+1,static_cast<int> ( population.size()-1 ) ) );
+
+}
+
+void Population::functionComputed ( double value ) {
+	throw runtime_error ( "this function is deprecated and should not be used" );
+}
+
+void Population::functionComputed ( const std::vector<double>& point, double value ) {
+
+	if ( population.size() < dimPopul ) {
+		population.push_back ( make_pair ( point, value ) );
+		if ( population.size() == dimPopul )
+			prepareForFamily();
+	} else
+		computedFamilyStepFunction ( point, value );
+
+}
+
+void Population::prepareForFamily() {
+
+	idxmin = min_element ( population.begin(),population.end() );
+	idxmax = max_element ( population.begin(),population.end());
+
+	delta = idxmax->value()  - idxmin->value();
+	deltaInit = delta;
+}
+
+
+void Population::setPopulation ( const std::vector< std::pair< std::vector<double>, double > >& newPopul ) {
+
+	population.assign ( newPopul.begin(),newPopul.end() );
+
+	if ( population.size() >= dimPopul )
+		prepareForFamily();
+
+}
+
+double Population::getBestValue() const {
+	return min_element ( population.begin(),population.end() )->value();
+
+}
+
+std::vector<double> Population::getBestPoint() const {
+
+	return min_element ( population.begin(),population.end() )->point();
+
+}
+
+}
+

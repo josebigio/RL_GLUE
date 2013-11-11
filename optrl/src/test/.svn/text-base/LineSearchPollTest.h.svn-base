@@ -1,0 +1,48 @@
+#ifndef pargo_LineSearchPollTest_h__guard
+#define pargo_LineSearchPollTest_h__guard
+
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+
+#include <pargo/LineSearchPoll.h>
+
+#include "problems/QuadraticProblem.h"
+
+#include <vector>
+#include <valarray>
+
+namespace pargo {
+  
+class LineSearchPollTest : public CppUnit::TestFixture {
+
+	CPPUNIT_TEST_SUITE( LineSearchPollTest );
+	CPPUNIT_TEST( testRun );
+	CPPUNIT_TEST( testNextPoint );
+	CPPUNIT_TEST( testRing );
+	CPPUNIT_TEST( testInternalAfterRing );
+	CPPUNIT_TEST( testOldPoint );
+	CPPUNIT_TEST_SUITE_END();
+
+public:
+	void setUp();
+	void tearDown();
+
+	void testRun();
+	void testNextPoint();
+	void testRing();
+	void testInternalAfterRing();
+	void testOldPoint();
+
+private:
+	LineSearchPoll::ParamType p;
+	LineSearchPoll *poll;
+	std::vector< std::valarray<double> > directions;
+	QuadraticProblem prob;
+
+};
+  
+  
+}
+
+
+#endif

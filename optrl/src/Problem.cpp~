@@ -1,0 +1,13 @@
+#include <pargo/Problem.h>
+
+
+namespace pargo {
+
+Problem::~Problem() {}
+
+double Problem::computef ( const double* xin, unsigned int size ) const {
+  std::vector<double> copied(xin,&xin[size]);
+  this->computef(copied);
+}
+
+}

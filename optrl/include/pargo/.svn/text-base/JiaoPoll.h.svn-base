@@ -1,0 +1,74 @@
+#ifndef pargo_JiaoPoll_h__guard
+#define pargo_JiaoPoll_h__guard
+
+#include <pargo/Poll.h>
+#include <pargo/BoundsPair.h>
+#include <pargo/PointValuePair.h>
+
+#include <vector>
+#include <valarray>
+#include <set>
+#include <list>
+#include <iosfwd>
+
+namespace pargo {
+
+class Problem;
+
+struct JiaoPollParams {
+
+    JiaoPollParams() :
+        populSize(100),
+        minDelta(1e-6) {}
+
+    unsigned int populSize;
+    double minDelta;
+};
+
+class JiaoPoll : public Poll {
+public:
+
+    typedef JiaoPollParams ParamType;
+
+    JiaoPoll(const std::vector<BoundsPair> & bounds, const ParamType par = ParamType());
+
+    bool hasConverged() const;
+
+    double getBestValue() const;
+    std::vector<double> getBestPoint() const;
+
+    std::vector<double> nextPoint();
+	
+	void saveTo( std::ostream& );
+	
+	void readFrom( std::istream& );
+
+
+    typedef std::vector< ValarrayValuePair > PopulationType;
+
+
+private:
+
+    ParamType par;
+    unsigned int probDim, pointsOut;
+    std::valarray<double>lower_bounds, upper_bounds;
+    PopulationType population;
+    double delta, deltaInit,worstValue;
+    bool best3Changed, tooManyAttempts;
+
+    void doFunctionComputed(const std::vector<double>& , double value);
+	
+	std::valarray<double> computeWeights(const std::set<PopulationType::const_iterator>& );
+    std::set<JiaoPoll::PopulationType::const_iterator> createFamilySet();
+    void keepPoint(const ValarrayValuePair& point);
+    std::vector<double> initialDistribution();
+    std::valarray<double> controlledRandomPoint();
+    bool isPointValid(std::valarray<double>& point) const;
+    std::valarray<double> pointFromBestThree();
+	std::vector<double> randomPoint() const;
+
+};
+
+}
+
+#endif // RandomGlobalPoll2_h

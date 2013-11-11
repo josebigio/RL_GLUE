@@ -1,0 +1,1 @@
+/usr/bin/c++       CMakeFiles/test_pargo.dir/src/test/problems/QuadraticProblem.cpp.o CMakeFiles/test_pargo.dir/src/test/mainTest.cpp.o CMakeFiles/test_pargo.dir/src/test/LineSearchPollTest.cpp.o  -o test_pargo -rdynamic -L/home/matish/programmi/optrl/algo -lcppunit libpargo.so -lpthread -Wl,-rpath,/home/matish/programmi/optrl/algo 

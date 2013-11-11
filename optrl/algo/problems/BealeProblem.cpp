@@ -1,0 +1,30 @@
+//from http://www-optima.amp.i.kyoto-u.ac.jp/member/student/hedar/Hedar_files/TestGO_files/Page364.htm
+
+#include "BealeProblem.h"
+
+#include <limits>
+#include <math.h>
+
+#include "ProblemStore.h"
+
+namespace pargo {
+
+	ProblemStore ps_Beale("Beale",new pargo::BealeProblem());
+
+using namespace std;
+
+int BealeProblem::getn() const {
+	return 2;
+}
+
+double BealeProblem::computef ( const std::vector<double>& x ) const {
+//   static int count = 0;
+// 	std::cout << "valutazione " << ++count << std::endl;
+	return pow(1.5-x[0]*(1-x[1]),2)+pow(2.25-x[0]*(1-pow(x[1],2)),2)+pow(2.625-x[0]*(1-pow(x[1],3)),2);
+}
+
+std::vector<BoundsPair> BealeProblem::getBounds() const {
+  return vector<BoundsPair>(getn(),make_pair(-4.5,4.5) );
+}
+
+}

@@ -1,0 +1,92 @@
+
+
+#include <pargo/CRADLE.h>
+#include <pargo/LocalCSMADPoll.h>
+
+#include <iostream>
+
+using namespace std;
+
+namespace pargo {
+
+CRADLE::CRADLE(const std::vector<BoundsPair> & bounds, const ParamType par) :
+	firstAlgorithm(new GlobalFastPoll(bounds,par)),
+	secondAlgorithm(NULL),
+	centre(bounds.size()),
+	bounds(bounds),
+	phase(CRADLE::global) {}
+
+std::vector<double> CRADLE::nextPoint() {
+	if(!firstAlgorithm->hasConverged())
+		return firstAlgorithm->nextPoint();
+
+	if(phase == global) {
+		phase = transition;
+		vector<double> centreVector = firstAlgorithm->getCentre(10); //best points to consider for the centre
+		centre = valarray<double>(&centreVector[0],centreVector.size());
+		return centreVector;
+	}
+
+	if(phase == transition) //a parallel algorithm is calling this
+		return firstAlgorithm->randomPoint();	//before the value of the centre arrives
+
+	//phase must be local
+
+	return secondAlgorithm->nextPoint();
+
+}
+
+void CRADLE::doFunctionComputed(const std::vector<double>& point , double value) {
+	if(phase == global)
+		firstAlgorithm->functionComputed(point,value);
+
+	else if(phase == transition) {
+		valarray<double> newPoint(&point[0],point.size());
+		if((newPoint != centre).sum() == 0) {
+			//move to local!
+			phase = local;
+
+			LocalSifonePoll::ParamType lp;
+			lp.initialStep =  firstAlgorithm->getRadius();
+			lp.minStep = lp.initialStep*1e-3;
+
+			secondAlgorithm = new LocalCSMADPoll(bounds,point,value,lp);
+		} else
+			firstAlgorithm->functionComputed(point,value);
+	} else {
+		secondAlgorithm->functionComputed(point,value);
+	}
+
+}
+
+void CRADLE::readPointsFrom(std::istream& is) {
+	firstAlgorithm->readFrom(is);
+}
+
+bool CRADLE::hasConverged() const {
+	return firstAlgorithm->hasConverged() && secondAlgorithm!=NULL && secondAlgorithm->hasConverged();
+}
+
+double CRADLE::getBestValue() const {
+	if(phase == local)
+		return secondAlgorithm->getBestValue();
+
+	return firstAlgorithm->getBestValue();
+}
+
+
+std::vector<double> CRADLE::getBestPoint() const {
+	if(phase == local)
+		return secondAlgorithm->getBestPoint();
+
+	return firstAlgorithm->getBestPoint();
+}
+
+CRADLE::~CRADLE() {
+	delete firstAlgorithm;
+	delete secondAlgorithm;
+}
+
+
+
+}

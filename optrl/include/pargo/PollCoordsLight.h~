@@ -1,0 +1,27 @@
+#ifndef POLLCOORDSLIGHT_H
+#define POLLCOORDSLIGHT_H
+
+#include <vector>
+
+namespace pargo {
+
+class Problem;
+  
+class PollCoordsLight
+{
+    public:
+
+        int computepoll(const std::vector<double>& xin, const double fin, const double stepsize,const Problem& prob);
+        std::vector<double> getx() { return xout; }
+        const double& getf() { return fout; }
+    protected:
+    private:
+
+        std::vector<double> xout;
+        double fout;
+
+};
+
+}
+
+#endif // POLLCOORDSLIGHT_H

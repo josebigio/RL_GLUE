@@ -1,0 +1,61 @@
+#ifndef POPULATION_H
+#define POPULATION_H
+
+#include <pargo/Poll.h>
+#include <pargo/PointValuePair.h>
+
+#include <vector>
+#include <set>
+
+namespace pargo {
+class PopComparator;
+class Problem;
+
+
+
+class Population : public Poll {
+public:
+
+    Population(const int dim, const std::vector<double> & lb, const std::vector<double> & ub);
+
+    virtual bool hasConverged() const {return false;} //TODO
+
+    virtual double getBestValue() const;
+    virtual std::vector<double> getBestPoint() const;
+    
+    void setPopulation(const std::vector< std::pair< std::vector<double>, double > >& newPopul);
+	
+ 
+    double getDelta() {
+        return delta;
+    };
+
+
+    std::vector<double> nextPoint();
+    void functionComputed(double value);
+	void functionComputed(const std::vector<double>& , double value);
+	
+	typedef std::vector< PointValuePair > PopulationType;
+
+
+private:
+    const int n,dimPopul;
+	
+	PopulationType population;
+	
+    PopulationType::iterator idxmax, idxmin;
+    double delta, deltaInit;
+    std::vector<double> lb, ub;
+
+    std::vector<double>  computeFamilyStepPoint(const int size);
+    int computedFamilyStepFunction( const std::vector<double>& newPoint, double fNewPoint);
+	void prepareForFamily();
+	std::vector<double> randomPoint();
+	bool isPointValid(const std::vector<double>& point);
+	
+	std::set< PopulationType::iterator > createFamilySet ( int);
+};
+
+}
+
+#endif // POPULATION_H

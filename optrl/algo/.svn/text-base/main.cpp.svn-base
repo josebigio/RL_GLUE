@@ -1,0 +1,94 @@
+
+#include <pargo/SequentialOptimizer.h>
+
+#include <pargo/GlobalFastPoll.h>
+#include <pargo/LocalSifonePoll.h>
+#include <pargo/LineSearchPoll.h>
+
+#include <pargo/obs/GnuplotObserver.h>
+
+#include "problems/ProblemStore.h"
+
+#include <pargo/Problem.h>
+
+#include <iostream>
+#include <vector>
+
+using namespace std;
+using namespace pargo;
+
+int main() {
+    srand ( time ( NULL ) );
+
+
+    Problem &prob = *ProblemStore::getProblemByName("Quadratic");
+
+
+    GlobalFastPoll::ParamType gp;
+    gp.populSize = 5*prob.getn();
+    gp.lastListLenght = 2*prob.getn();
+
+    GlobalFastPoll poll(prob.getBounds(),gp);
+
+
+    GnuplotObserver obs ( "points.txt" );
+    poll.setObserver ( obs );
+
+	SequentialOptimizer opt;
+	unsigned long count = 0;
+    count = opt.run ( &prob,&poll,1000000);
+	
+	ofstream pfile("population.txt");
+	
+	poll.saveTo(pfile);
+	pfile.close();
+	
+	ifstream pifile("population.txt");
+	GlobalFastPoll provaP(prob.getBounds(),gp);
+	provaP.readFrom(pifile);
+	pifile.close();
+	pfile.open("population2.txt");
+	provaP.saveTo(pfile);
+	pfile.close();
+
+    vector<double> bestPoint = poll.getBestPoint();
+// 	vector<double> bestPoint(2);
+// 	bestPoint[0] = -1.40195e-05;
+// 	bestPoint[1] = 0.000297849;
+	
+    cout << "best point:" << endl;
+
+    for ( int i=0; i<prob.getn(); ++i ) {
+        cout << bestPoint[i] << " ";
+    }
+
+    cout << endl;
+    cout << "f best: " << poll.getBestValue() << endl;
+	cout << "radius: " << poll.getRadius() << endl;
+    cout << "f count=" << count << endl;
+
+	double bestV = poll.getBestValue();
+
+    LocalSifonePoll::ParamType lp;
+    lp.initialStep =  poll.getRadius();
+    lp.minStep = lp.initialStep*1e-3;
+
+	LocalSifonePoll poll2(prob.getBounds(),bestPoint,bestV,lp);
+    poll2.setObserver(obs);
+
+	count += opt.run ( &prob,&poll2,1000000);
+
+	bestPoint = poll2.getBestPoint();
+	
+    cout << "best point:" << endl;
+
+    for ( int i=0; i<prob.getn(); ++i ) {
+        cout << bestPoint[i] << " ";
+    }
+
+    cout << endl;
+    cout << "f best:" << poll2.getBestValue() << endl;
+    cout << "f count=" << count << endl;
+
+    return 0;
+}

@@ -1,0 +1,53 @@
+#ifndef pargo_CoordinateSearchAlgorithm_h__guard
+#define pargo_CoordinateSearchAlgorithm_h__guard
+
+#include <vector>
+
+
+namespace pargo {
+
+class Problem;
+
+class CoordinateSearchAlgorithm {
+public:
+
+
+	explicit CoordinateSearchAlgorithm ( Problem* prob );
+
+
+	void run ( const std::vector<double>& initial );
+
+	int getn() const;
+	std::vector<double> getx() const {
+		return x;
+	}
+	int getiter() const {
+		return iter;
+	}
+	double getstepsize() const {
+		return stepsize;
+	}
+	double getf() const {
+		return f;
+	}
+
+	//TODO if these are parameters move them to the constructor
+	static const int maxiter = 1000;
+	static const double stop = 1E-5;
+	static const double theta =0.5;
+
+private:
+
+	int iter;
+	double stepsize, f;
+	std::vector<double> x;
+
+	void poll();
+
+	//does not own
+	Problem& prob;
+};
+
+}
+
+#endif 

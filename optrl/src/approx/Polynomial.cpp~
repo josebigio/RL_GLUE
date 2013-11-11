@@ -1,0 +1,64 @@
+#include <pargo/approx/PolynomialFA.h>
+
+#include <iostream>
+
+namespace pargo {
+
+using namespace std;
+
+
+unsigned int PolynomialFA::getNumBasisFunctions() const {
+
+return 0; //TODO
+};
+
+static void increment_indices(vector<int>& indices);
+
+vector<double> PolynomialFA::computeFeatures ( const std::vector<double>& observations ) {
+
+	vector<double> features;
+	features.reserve(getNumBasisFunctions());
+
+	features.push_back(1); //zero degree
+	
+	for(int d=1; d<= degree; ++d) {
+		vector<int> indices(d);
+
+		cout << "summing degree " << d << endl;
+
+		while(indices[0] < nvars ) {
+
+			double product = 1;
+			for(int t=0; t<d; ++t) {
+				cout << indices[t] << " ";
+				product *= observations[indices[t]];
+			}
+			cout << endl;
+				
+
+			features.push_back(product);
+
+			increment_indices(indices);
+
+		}
+		
+	}
+
+	return features;
+}
+
+int PolynomialFA::increment_indices ( std::vector< int >& indices ) {
+	if(pos == 0)
+		return ++indices[pos];
+	
+	if(indices[pos] + 1 == nvars)
+		indices[pos] = do_increment(indices,pos-1);
+	else
+		++indices[pos];
+	
+	return indices[pos];
+}
+
+
+
+}
